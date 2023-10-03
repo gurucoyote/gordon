@@ -20,6 +20,7 @@ var Interactive bool
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&Interactive, "interactive", "i", false, "Start the interactive mode for the app")
+	RootCmd.AddCommand(exitCmd)
 }
 
 func Execute() {
