@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var RootCmd = &cobra.Command{
@@ -25,4 +26,14 @@ func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 	}
+}
+
+var exitCmd = &cobra.Command{
+	Use:     "exit",
+	Aliases: []string{"q", "Q", "bye"},
+	Short:   "Exit the application",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Goodbye!")
+		os.Exit(0)
+	},
 }
