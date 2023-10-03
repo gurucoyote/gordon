@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
+	"time"
 )
 
 var playCmd = &cobra.Command{
@@ -17,7 +21,27 @@ var playCmd = &cobra.Command{
 			fmt.Printf("File %s does not exist\n", file)
 			return
 		}
-		// TODO: Add code to play the file
+
+		// Open the file
+		f, err := os.Open(file)
+		if err != nil {
+			fmt.Printf("Failed to open file: %s\n", err)
+			return
+		}
+
+		// Decode the file
+		streamer, format, err := mp3.Decode(f)
+		if err != nil {
+			fmt.Printf("Failed to decode file: %s\n", err)
+			return
+		}
+		defer streamer.Close()
+
+		// Initialize the speaker
+		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
+
+		// Play the music
+		speaker.Play(streamer)
 	},
 }
 
