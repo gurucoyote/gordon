@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var playCmd = &cobra.Command{
 	Use:   "play [file]",
 	Short: "Play a music file",
-	Long: `Play a music file. The file must be in either mp3, flac, or wav format.`,
+	Long:  `Play a music file. The file must be in either mp3, flac, or wav format.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
