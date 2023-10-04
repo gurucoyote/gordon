@@ -40,8 +40,13 @@ var playCmd = &cobra.Command{
 		// Initialize the speaker
 		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
 
-		// Play the music
-		speaker.Play(streamer)
+		// Play the music and block until it finishes
+		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+			close(done)
+		})))
+
+		// Block until the music finishes
+		<-done
 	},
 }
 
