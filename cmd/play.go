@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
-	"github.com/faiface/beep"
+	"time"
+	// "github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
-	"time"
+	"github.com/spf13/cobra"
 )
 
 var playCmd = &cobra.Command{
