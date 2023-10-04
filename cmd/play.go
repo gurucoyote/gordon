@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"time"
-	// "github.com/faiface/beep"
+	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/spf13/cobra"
@@ -39,6 +39,9 @@ var playCmd = &cobra.Command{
 
 		// Initialize the speaker
 		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
+
+		// Define the done channel
+		done := make(chan bool)
 
 		// Play the music and block until it finishes
 		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
