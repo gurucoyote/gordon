@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/mp3"
+	"github.com/gopxl/beep/speaker"
+	"github.com/spf13/cobra"
 	"os"
 	"time"
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/mp3"
-	"github.com/faiface/beep/speaker"
-	"github.com/spf13/cobra"
 )
 
 var playCmd = &cobra.Command{
@@ -38,18 +38,23 @@ var playCmd = &cobra.Command{
 		defer streamer.Close()
 
 		// Initialize the speaker
-		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
+		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
-		// Define the done channel
-		done := make(chan bool)
+		// ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
+		ctrl := &beep.Ctrl{Streamer: streamer, Paused: false}
+		speaker.Play(ctrl)
 
-		// Play the music and block until it finishes
-		speaker.Play(beep.Seq(streamer, beep.Callback(func() {
-			close(done)
-		})))
+		for {
+			fmt.Print("Press [ENTER] to pause/resume. ")
+			fmt.Scanln()
 
-		// Block until the music finishes
-		<-done
+			speaker.Lock()
+			// pause/resume playback
+			ctrl.Paused = !ctrl.Paused
+			// output what second we are on now
+			fmt.Println(format.SampleRate.D(streamer.Position()).Round(time.Second))
+			speaker.Unlock()
+		}
 	},
 }
 
