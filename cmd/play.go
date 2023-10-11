@@ -47,8 +47,8 @@ var playCmd = &cobra.Command{
 		speaker.Play(ctrl)
 
 		reader := bufio.NewReader(os.Stdin)
+		fmt.Println("Press [ENTER] to pause/resume, 'q' to stop. ")
 		for {
-			fmt.Print("\rPress [ENTER] to pause/resume, 'q' to stop. ")
 			input, _ := reader.ReadString('\n')
 			input = strings.TrimSpace(input)
 
@@ -57,7 +57,6 @@ var playCmd = &cobra.Command{
 				f.Close()
 				return
 			}
-
 			speaker.Lock()
 			// pause/resume playback
 			ctrl.Paused = !ctrl.Paused
@@ -65,6 +64,7 @@ var playCmd = &cobra.Command{
 			fmt.Print("\r                                                                 \r")
 			fmt.Print(format.SampleRate.D(streamer.Position()).Round(time.Second))
 			speaker.Unlock()
+
 		}
 	},
 }
