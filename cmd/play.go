@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 	"time"
 )
 
