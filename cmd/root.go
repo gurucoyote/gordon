@@ -8,9 +8,9 @@ import (
 
 var RootCmd = &cobra.Command{
 	Use:   "app",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application.`,
+	Short: "A music player application",
+	Long: `This is a command-line music player application. It supports playing music files in mp3, flac, or wav format.
+You can use the 'play' command followed by the file path to play a music file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Put your code here
 	},
