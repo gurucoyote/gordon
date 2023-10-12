@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
 	"github.com/spf13/cobra"
 	"os"
-	"strings"
-	"time"
 )
 
 var ctrl *beep.Ctrl
@@ -45,14 +42,12 @@ var playCmd = &cobra.Command{
 		}
 		// what info do we get here?
 		fmt.Println(format)
-		defer streamer.Close()
+		// defer streamer.Close()
 
 		ctrl = &beep.Ctrl{Streamer: streamer, Paused: false}
 		speaker.Play(ctrl)
-
-		for {
-
-		}
+		// this should drop us into interactive mode and continue playing
+		return
 	},
 }
 
@@ -62,13 +57,14 @@ var pauseCmd = &cobra.Command{
 	Short:   "Toggle play/pause of current sound",
 	Long:    `Toggle play/pause of current sound.`,
 	Run: func(cmd *cobra.Command, args []string) {
-			// pause/resume playback
-			speaker.Lock()
-			ctrl.Paused = !ctrl.Paused
-			// output what second we are on now
-			// fmt.Print("\r                                                                 \r")
-			// fmt.Print(format.SampleRate.D(streamer.Position()).Round(time.Second))
-			speaker.Unlock()
+		// pause/resume playback
+		speaker.Lock()
+		ctrl.Paused = !ctrl.Paused
+		// output what second we are on now
+		// fmt.Print(format.SampleRate.D(streamer.Position()).Round(time.Second))
+		speaker.Unlock()
+		speaker.Play(ctrl)
+		return
 	},
 }
 
@@ -80,6 +76,7 @@ var rewindCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Rewind command stub")
+		speaker.Play(ctrl)
 	},
 }
 
@@ -91,6 +88,7 @@ var forwardCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Forward command stub")
+		speaker.Play(ctrl)
 	},
 }
 
@@ -101,11 +99,11 @@ var stopCmd = &cobra.Command{
 	Long:    `Stop playback.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Stop command stub")
-				return
+		return
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(playCmd)
-	playCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, stopCmd)
+	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, stopCmd)
 }
