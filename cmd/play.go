@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var ctrl *beep.Ctrl
+
 var playCmd = &cobra.Command{
 	Use:   "play [file]",
 	Short: "Play a music file",
@@ -41,30 +43,14 @@ var playCmd = &cobra.Command{
 			fmt.Printf("Failed to decode file: %s\n", err)
 			return
 		}
+		// what info do we get here?
+		fmt.Println(format)
 		defer streamer.Close()
 
-		// ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
-		ctrl := &beep.Ctrl{Streamer: streamer, Paused: false}
+		ctrl = &beep.Ctrl{Streamer: streamer, Paused: false}
 		speaker.Play(ctrl)
 
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Println("Press [ENTER] to pause/resume, 'q' to stop. ")
 		for {
-			input, _ := reader.ReadString('\n')
-			input = strings.TrimSpace(input)
-
-			if input == "q" || input == "Q" {
-				speaker.Close()
-				f.Close()
-				return
-			}
-			speaker.Lock()
-			// pause/resume playback
-			ctrl.Paused = !ctrl.Paused
-			// output what second we are on now
-			fmt.Print("\r                                                                 \r")
-			fmt.Print(format.SampleRate.D(streamer.Position()).Round(time.Second))
-			speaker.Unlock()
 
 		}
 	},
@@ -76,7 +62,13 @@ var pauseCmd = &cobra.Command{
 	Short:   "Toggle play/pause of current sound",
 	Long:    `Toggle play/pause of current sound.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Pause command stub")
+			// pause/resume playback
+			speaker.Lock()
+			ctrl.Paused = !ctrl.Paused
+			// output what second we are on now
+			// fmt.Print("\r                                                                 \r")
+			// fmt.Print(format.SampleRate.D(streamer.Position()).Round(time.Second))
+			speaker.Unlock()
 	},
 }
 
@@ -109,6 +101,7 @@ var stopCmd = &cobra.Command{
 	Long:    `Stop playback.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Stop command stub")
+				return
 	},
 }
 
