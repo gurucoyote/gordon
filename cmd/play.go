@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/effects"
@@ -98,26 +100,21 @@ var rewindCmd = &cobra.Command{
 	Use:     "rewind [seconds]",
 	Aliases: []string{"rw"},
 	Short:   "Rewind playback position by n seconds",
-	Long:    `Rewind playback position by n seconds.`,
-	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Rewind command stub")
+		var relpos float64 = 1.0
+		if len(args) > 0 {
+			var err error
+			relpos, err = strconv.ParseFloat(args[0], 64)
+			if err != nil {
+				fmt.Printf("Failed to parse argument: %s\n", err)
+				return
+			}
+		}
+		// negate it so we go backward
+		relpos = relpos * -1
+		fmt.Printf("rewind command with relative position: %f\n", relpos)
+		seekPos(relpos)
 		ap.play()
-		/*
-			if event.Rune() == 'w' {
-				newPos += ap.sampleRate.N(time.Second)
-			}
-						if newPos < 0 {
-				newPos = 0
-			}
-			if newPos >= ap.streamer.Len() {
-				newPos = ap.streamer.Len() - 1
-			}
-			if err := ap.streamer.Seek(newPos); err != nil {
-				report(err)
-			}
-
-		*/
 	},
 }
 
@@ -125,10 +122,18 @@ var forwardCmd = &cobra.Command{
 	Use:     "forward [seconds]",
 	Aliases: []string{"fw"},
 	Short:   "Forward playback position by n seconds",
-	Long:    `Forward playback position by n seconds.`,
-	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Forward command stub")
+		var relpos float64 = 1.0
+		if len(args) > 0 {
+			var err error
+			relpos, err = strconv.ParseFloat(args[0], 64)
+			if err != nil {
+				fmt.Printf("Failed to parse argument: %s\n", err)
+				return
+			}
+		}
+		fmt.Printf("Forward command with relative position: %f\n", relpos)
+		seekPos(relpos)
 		ap.play()
 	},
 }
@@ -147,4 +152,19 @@ var stopCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(playCmd)
 	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, stopCmd)
+}
+func seekPos(pos float64) {
+	newPos := ap.streamer.Position()
+	// move this by the passed float seconds
+	newPos += ap.sampleRate.N(time.Duration(pos) * time.Second)
+	if newPos < 0 {
+		newPos = 0
+	}
+	if newPos >= ap.streamer.Len() {
+		newPos = ap.streamer.Len() - 1
+	}
+	if err := ap.streamer.Seek(newPos); err != nil {
+		fmt.Println(err)
+	}
+
 }
