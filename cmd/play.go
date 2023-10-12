@@ -2,14 +2,37 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/effects"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
+
 	"github.com/spf13/cobra"
-	"os"
 )
 
-var ctrl *beep.Ctrl
+// var ctrl *beep.Ctrl
+var ap *audioPanel
+
+type audioPanel struct {
+	sampleRate beep.SampleRate
+	streamer   beep.StreamSeeker
+	ctrl       *beep.Ctrl
+	resampler  *beep.Resampler
+	volume     *effects.Volume
+}
+
+func newAudioPanel(sampleRate beep.SampleRate, streamer beep.StreamSeeker) *audioPanel {
+	ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer)}
+	resampler := beep.ResampleRatio(4, 1, ctrl)
+	volume := &effects.Volume{Streamer: resampler, Base: 2}
+	return &audioPanel{sampleRate, streamer, ctrl, resampler, volume}
+}
+
+func (ap *audioPanel) play() {
+	speaker.Play(ap.volume)
+}
 
 var playCmd = &cobra.Command{
 	Use:   "play [file]",
@@ -44,8 +67,10 @@ var playCmd = &cobra.Command{
 		fmt.Println(format)
 		// defer streamer.Close()
 
-		ctrl = &beep.Ctrl{Streamer: streamer, Paused: false}
-		speaker.Play(ctrl)
+		// ctrl = &beep.Ctrl{Streamer: streamer, Paused: false}
+		ap = newAudioPanel(format.SampleRate, streamer)
+		ap.play()
+		// speaker.Play(ctrl)
 		// this should drop us into interactive mode and continue playing
 		return
 	},
@@ -59,11 +84,12 @@ var pauseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// pause/resume playback
 		speaker.Lock()
-		ctrl.Paused = !ctrl.Paused
+		ap.ctrl.Paused = !ap.ctrl.Paused
 		// output what second we are on now
 		// fmt.Print(format.SampleRate.D(streamer.Position()).Round(time.Second))
 		speaker.Unlock()
-		speaker.Play(ctrl)
+		ap.play()
+		// speaker.Play(ctrl)
 		return
 	},
 }
@@ -76,7 +102,22 @@ var rewindCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Rewind command stub")
-		speaker.Play(ctrl)
+		ap.play()
+		/*
+			if event.Rune() == 'w' {
+				newPos += ap.sampleRate.N(time.Second)
+			}
+						if newPos < 0 {
+				newPos = 0
+			}
+			if newPos >= ap.streamer.Len() {
+				newPos = ap.streamer.Len() - 1
+			}
+			if err := ap.streamer.Seek(newPos); err != nil {
+				report(err)
+			}
+
+		*/
 	},
 }
 
@@ -88,7 +129,7 @@ var forwardCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Forward command stub")
-		speaker.Play(ctrl)
+		ap.play()
 	},
 }
 
