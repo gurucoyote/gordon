@@ -18,6 +18,10 @@ var playCmd = &cobra.Command{
 	Long:  `Play a music file. The file must be in either mp3, flac, or wav format.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// make sure we get to enter commands after playback starts
+		// also, this will 'block' so that the sound can play before the program ends
+		Interactive = true
+		// load the file
 		file := args[0]
 		if _, err := os.Stat(file); os.IsNotExist(err) {
 			fmt.Printf("File %s does not exist\n", file)
@@ -38,9 +42,6 @@ var playCmd = &cobra.Command{
 			return
 		}
 		defer streamer.Close()
-
-		// Initialize the speaker
-		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
 		// ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
 		ctrl := &beep.Ctrl{Streamer: streamer, Paused: false}
@@ -69,6 +70,49 @@ var playCmd = &cobra.Command{
 	},
 }
 
+var pauseCmd = &cobra.Command{
+	Use:     "pause",
+	Aliases: []string{"p"},
+	Short:   "Toggle play/pause of current sound",
+	Long:    `Toggle play/pause of current sound.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Pause command stub")
+	},
+}
+
+var rewindCmd = &cobra.Command{
+	Use:     "rewind [seconds]",
+	Aliases: []string{"rw"},
+	Short:   "Rewind playback position by n seconds",
+	Long:    `Rewind playback position by n seconds.`,
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Rewind command stub")
+	},
+}
+
+var forwardCmd = &cobra.Command{
+	Use:     "forward [seconds]",
+	Aliases: []string{"fw"},
+	Short:   "Forward playback position by n seconds",
+	Long:    `Forward playback position by n seconds.`,
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Forward command stub")
+	},
+}
+
+var stopCmd = &cobra.Command{
+	Use:     "stop",
+	Aliases: []string{"s"},
+	Short:   "Stop playback",
+	Long:    `Stop playback.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Stop command stub")
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(playCmd)
+	playCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, stopCmd)
 }
