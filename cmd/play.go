@@ -87,10 +87,14 @@ var pauseCmd = &cobra.Command{
 		// pause/resume playback
 		speaker.Lock()
 		ap.ctrl.Paused = !ap.ctrl.Paused
-		// output what second we are on now
-		// fmt.Print(format.SampleRate.D(streamer.Position()).Round(time.Second))
+		position := ap.sampleRate.D(ap.streamer.Position())
+		length := ap.sampleRate.D(ap.streamer.Len())
+		volume := ap.volume.Volume
 		speaker.Unlock()
 		ap.play()
+		positionStatus := fmt.Sprintf("%v / %v", position.Round(time.Second), length.Round(time.Second))
+		volumeStatus := fmt.Sprintf("%.1f", volume)
+		fmt.Println(positionStatus, volumeStatus)
 		// speaker.Play(ctrl)
 		return
 	},
@@ -138,20 +142,32 @@ var forwardCmd = &cobra.Command{
 	},
 }
 
-var stopCmd = &cobra.Command{
-	Use:     "stop",
-	Aliases: []string{"s"},
-	Short:   "Stop playback",
-	Long:    `Stop playback.`,
+var volumeCmd = &cobra.Command{
+	Use:     "volume",
+	Aliases: []string{"vol"},
+	Short:   "set volume in 0-100%",
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Stop command stub")
-		return
+		vol, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Printf("Failed to parse argument: %s\n", err)
+			return
+		}
+		if vol < 0 || vol > 100 {
+			fmt.Println("Volume must be between 0 and 100")
+			return
+		}
+		speaker.Lock()
+		ap.volume.Volume = float64(vol) / 100
+		speaker.Unlock()
+		ap.play()
+		fmt.Printf("Volume set to %d%%\n", vol)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(playCmd)
-	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, stopCmd)
+	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, volumeCmd)
 }
 func seekPos(pos float64) {
 	newPos := ap.streamer.Position()
