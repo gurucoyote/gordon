@@ -239,3 +239,7 @@ func seekPos(pos float64) {
 	}
 
 }
+type PlaybackPosition struct {
+	SamplePosition int
+	PlayPosition   float64
+}
