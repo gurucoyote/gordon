@@ -205,6 +205,17 @@ var loopCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Implement loop command
 		fmt.Println("loop command stub")
+		startPos, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Printf("Failed to parse start_marker argument: %s\n", err)
+			return
+		}
+		endPos, err := strconv.Atoi(args[1])
+		if err != nil {
+			fmt.Printf("Failed to parse end_marker argument: %s\n", err)
+			return
+		}
+		fmt.Printf("Loop between markers %d and %d\n", startPos, endPos)
 	},
 }
 
