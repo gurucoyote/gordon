@@ -201,14 +201,21 @@ var gotoCmd = &cobra.Command{
 	Short: "Go to a marker",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Implement goto command
-		fmt.Println("goto command stub")
-		newPos, err := strconv.Atoi(args[0])
+		markerIndex, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse argument: %s\n", err)
 			return
 		}
-		fmt.Printf("Go to marker %d\n", newPos)
+		if markerIndex < 0 || markerIndex >= len(Markers) {
+			fmt.Printf("Marker %d does not exist\n", markerIndex)
+			return
+		}
+		marker := Markers[markerIndex]
+		if err := ap.streamer.Seek(marker.SamplePosition); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("Go to marker %d\n", markerIndex)
 	},
 }
 
