@@ -243,3 +243,5 @@ type PlaybackPosition struct {
 	SamplePosition int
 	PlayPosition   float64
 }
+
+var Markers []PlaybackPosition
