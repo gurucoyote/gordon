@@ -165,10 +165,42 @@ var volumeCmd = &cobra.Command{
 	},
 }
 
+var setMarkerCmd = &cobra.Command{
+	Use:     "setmarker [marker]",
+	Aliases: []string{"m"},
+	Short:   "Set a marker",
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: Implement setmarker command
+		fmt.Println("setmarker command stub")
+	},
+}
+
+var gotoCmd = &cobra.Command{
+	Use:   "goto [marker]",
+	Short: "Go to a marker",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: Implement goto command
+		fmt.Println("goto command stub")
+	},
+}
+
+var loopCmd = &cobra.Command{
+	Use:   "loop [start_marker] [end_marker]",
+	Short: "Loop between two markers",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: Implement loop command
+		fmt.Println("loop command stub")
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(playCmd)
-	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, volumeCmd)
+	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd)
 }
+
 func seekPos(pos float64) {
 	newPos := ap.streamer.Position()
 	// move this by the passed float seconds
