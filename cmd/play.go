@@ -187,11 +187,10 @@ var setMarkerCmd = &cobra.Command{
 			PlayPosition:   playPosition,
 		}
 
-		if index < len(Markers) {
-			Markers[index] = newMarker
-		} else {
-			Markers = append(Markers, newMarker)
+		for len(Markers) <= index {
+			Markers = append(Markers, PlaybackPosition{})
 		}
+		Markers[index] = newMarker
 
 		fmt.Printf("Marker %d set to sample position %d (play position %.2f seconds)\n", index, samplePosition, playPosition)
 	},
