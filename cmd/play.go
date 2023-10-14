@@ -173,6 +173,12 @@ var setMarkerCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Implement setmarker command
 		fmt.Println("setmarker command stub")
+		newPos, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Printf("Failed to parse argument: %s\n", err)
+			return
+		}
+		fmt.Printf("Marker set to %d\n", newPos)
 	},
 }
 
@@ -183,6 +189,12 @@ var gotoCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Implement goto command
 		fmt.Println("goto command stub")
+		newPos, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Printf("Failed to parse argument: %s\n", err)
+			return
+		}
+		fmt.Printf("Go to marker %d\n", newPos)
 	},
 }
 
