@@ -171,14 +171,29 @@ var setMarkerCmd = &cobra.Command{
 	Short:   "Set a marker",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Implement setmarker command
-		fmt.Println("setmarker command stub")
-		newPos, err := strconv.Atoi(args[0])
+		index, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse argument: %s\n", err)
 			return
 		}
-		fmt.Printf("Marker set to %d\n", newPos)
+
+		speaker.Lock()
+		samplePosition := ap.streamer.Position()
+		playPosition := ap.sampleRate.D(samplePosition).Seconds()
+		speaker.Unlock()
+
+		newMarker := PlaybackPosition{
+			SamplePosition: samplePosition,
+			PlayPosition:   playPosition,
+		}
+
+		if index < len(Markers) {
+			Markers[index] = newMarker
+		} else {
+			Markers = append(Markers, newMarker)
+		}
+
+		fmt.Printf("Marker %d set to sample position %d (play position %.2f seconds)\n", index, samplePosition, playPosition)
 	},
 }
 
