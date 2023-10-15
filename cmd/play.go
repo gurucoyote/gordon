@@ -14,27 +14,36 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// var ctrl *beep.Ctrl
-var ap *audioPanel
+var Markers []PlaybackPosition
 
 type audioPanel struct {
 	sampleRate beep.SampleRate
 	streamer   beep.StreamSeeker
 	ctrl       *beep.Ctrl
 	resampler  *beep.Resampler
+	loop       *loopBetween
 	volume     *effects.Volume
 }
 
 func newAudioPanel(sampleRate beep.SampleRate, streamer beep.StreamSeeker) *audioPanel {
-	ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer)}
+	// ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer)}
+	loop := LoopBetween(-1, 0, streamer.Len(), streamer)
+	ctrl := &beep.Ctrl{Streamer: loop}
 	resampler := beep.ResampleRatio(4, 1, ctrl)
-	volume := &effects.Volume{Streamer: resampler, Base: 2}
-	return &audioPanel{sampleRate, streamer, ctrl, resampler, volume}
+	volume := &effects.Volume{Streamer: ctrl, Base: 2}
+	return &audioPanel{sampleRate,
+		streamer,
+		ctrl,
+		resampler,
+		loop,
+		volume}
 }
 
 func (ap *audioPanel) play() {
 	speaker.Play(ap.volume)
 }
+
+var ap *audioPanel
 
 var playCmd = &cobra.Command{
 	Use:   "play [file]",
@@ -69,10 +78,8 @@ var playCmd = &cobra.Command{
 		fmt.Println(format)
 		// defer streamer.Close()
 
-		// ctrl = &beep.Ctrl{Streamer: streamer, Paused: false}
 		ap = newAudioPanel(format.SampleRate, streamer)
 		ap.play()
-		// speaker.Play(ctrl)
 		// this should drop us into interactive mode and continue playing
 		return
 	},
@@ -95,7 +102,6 @@ var pauseCmd = &cobra.Command{
 		positionStatus := fmt.Sprintf("%v / %v", position.Round(time.Second), length.Round(time.Second))
 		volumeStatus := fmt.Sprintf("%.1f", volume)
 		fmt.Println(positionStatus, volumeStatus)
-		// speaker.Play(ctrl)
 		return
 	},
 }
@@ -224,19 +230,25 @@ var loopCmd = &cobra.Command{
 	Short: "Loop between two markers",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Implement loop command
-		fmt.Println("loop command stub")
-		startPos, err := strconv.Atoi(args[0])
+		startMarker, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse start_marker argument: %s\n", err)
 			return
 		}
-		endPos, err := strconv.Atoi(args[1])
+		endMarker, err := strconv.Atoi(args[1])
 		if err != nil {
 			fmt.Printf("Failed to parse end_marker argument: %s\n", err)
 			return
 		}
-		fmt.Printf("Loop between markers %d and %d\n", startPos, endPos)
+		fmt.Printf("Loop between markers %d and %d\n", startMarker, endMarker)
+		startPos := Markers[startMarker].SamplePosition
+		endPos := Markers[endMarker].SamplePosition
+		speaker.Lock()
+		ap.loop.start = startPos
+		ap.loop.end = endPos
+		speaker.Unlock()
+		ap.play()
+
 	},
 }
 
@@ -260,9 +272,56 @@ func seekPos(pos float64) {
 	}
 
 }
+
 type PlaybackPosition struct {
 	SamplePosition int
 	PlayPosition   float64
 }
 
-var Markers []PlaybackPosition
+// LoopBetween takes a StreamSeeker and plays it between start and end positions. If count is negative, s is looped infinitely.
+//
+// The returned Streamer propagates s's errors.
+func LoopBetween(count int, start int, end int, s beep.StreamSeeker) *loopBetween {
+	return &loopBetween{
+		s:       s,
+		remains: count,
+		start:   start,
+		end:     end,
+	}
+}
+
+type loopBetween struct {
+	s       beep.StreamSeeker
+	remains int
+	start   int
+	end     int
+}
+
+func (l *loopBetween) Stream(samples [][2]float64) (n int, ok bool) {
+	if l.remains == 0 || l.s.Err() != nil {
+		return 0, false
+	}
+	for len(samples) > 0 {
+		sn, sok := l.s.Stream(samples)
+		if !sok || l.s.Position() >= l.end {
+			if l.remains > 0 {
+				l.remains--
+			}
+			if l.remains == 0 {
+				break
+			}
+			err := l.s.Seek(l.start)
+			if err != nil {
+				return n, true
+			}
+			continue
+		}
+		samples = samples[sn:]
+		n += sn
+	}
+	return n, true
+}
+
+func (l *loopBetween) Err() error {
+	return l.s.Err()
+}
