@@ -8,9 +8,12 @@ import (
 
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/effects"
+	"github.com/gopxl/beep/flac"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
+	"github.com/gopxl/beep/vorbis"
 	"github.com/gopxl/beep/wav"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -72,8 +75,23 @@ var playCmd = &cobra.Command{
 			return
 		}
 
-		// Decode the file
-		streamer, decodedFormat, err := mp3.Decode(f)
+		// Determine the file type and decode accordingly
+		var streamer beep.StreamSeeker
+		var decodedFormat beep.Format
+
+		switch {
+		case strings.HasSuffix(file, ".mp3"):
+			streamer, decodedFormat, err = mp3.Decode(f)
+		case strings.HasSuffix(file, ".wav"):
+			streamer, decodedFormat, err = wav.Decode(f)
+		case strings.HasSuffix(file, ".flac"):
+			streamer, decodedFormat, err = flac.Decode(f)
+		case strings.HasSuffix(file, ".ogg"):
+			streamer, decodedFormat, err = vorbis.Decode(f)
+		default:
+			fmt.Printf("Unsupported file format: %s\n", file)
+			return
+		}
 		format = decodedFormat
 		if err != nil {
 			fmt.Printf("Failed to decode file: %s\n", err)
