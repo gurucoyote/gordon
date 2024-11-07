@@ -15,7 +15,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Markers []PlaybackPosition
+var (
+	Markers []PlaybackPosition
+	format  beep.Format
+)
 
 type audioPanel struct {
 	sampleRate beep.SampleRate
@@ -70,7 +73,8 @@ var playCmd = &cobra.Command{
 		}
 
 		// Decode the file
-		streamer, format, err := mp3.Decode(f)
+		streamer, decodedFormat, err := mp3.Decode(f)
+		format = decodedFormat
 		if err != nil {
 			fmt.Printf("Failed to decode file: %s\n", err)
 			return
