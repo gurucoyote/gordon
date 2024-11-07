@@ -258,8 +258,60 @@ var saveCmd = &cobra.Command{
 	Long:  `Save the audio loop between two specified markers to a .wav file.`,
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Implement saving functionality
-		fmt.Println("Save command is not yet implemented.")
+		startMarker, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Printf("Failed to parse start_marker argument: %s\n", err)
+			return
+		}
+		endMarker, err := strconv.Atoi(args[1])
+		if err != nil {
+			fmt.Printf("Failed to parse end_marker argument: %s\n", err)
+			return
+		}
+		outputFile := args[2]
+
+		if startMarker < 0 || startMarker >= len(Markers) || endMarker < 0 || endMarker >= len(Markers) {
+			fmt.Println("Invalid marker indices")
+			return
+		}
+
+		startPos := Markers[startMarker].SamplePosition
+		endPos := Markers[endMarker].SamplePosition
+
+		if startPos >= endPos {
+			fmt.Println("Start marker must be before end marker")
+			return
+		}
+
+		// Create the output file
+		f, err := os.Create(outputFile)
+		if err != nil {
+			fmt.Printf("Failed to create output file: %s\n", err)
+			return
+		}
+		defer f.Close()
+
+		// Seek to the start position
+		if err := ap.streamer.Seek(startPos); err != nil {
+			fmt.Printf("Failed to seek to start position: %s\n", err)
+			return
+		}
+
+		// Create a buffer for the segment
+		buffer := beep.NewBuffer(format)
+		segment := beep.Take(endPos-startPos, ap.streamer)
+		buffer.Append(segment)
+
+		// Create a streamer from the buffer
+		streamer := buffer.Streamer(0, buffer.Len())
+
+		// Encode the streamer to a wav file
+		if err := beep.Encode(f, streamer, format); err != nil {
+			fmt.Printf("Failed to encode wav file: %s\n", err)
+			return
+		}
+
+		fmt.Printf("Saved segment between markers %d and %d to %s\n", startMarker, endMarker, outputFile)
 	},
 }
 
