@@ -10,6 +10,7 @@ import (
 	"github.com/gopxl/beep/effects"
 	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
+	"github.com/gopxl/beep/wav"
 
 	"github.com/spf13/cobra"
 )
@@ -306,7 +307,7 @@ var saveCmd = &cobra.Command{
 		streamer := buffer.Streamer(0, buffer.Len())
 
 		// Encode the streamer to a wav file
-		if err := beep.Encode(f, streamer, format); err != nil {
+		if err := wav.Encode(f, streamer, format); err != nil {
 			fmt.Printf("Failed to encode wav file: %s\n", err)
 			return
 		}
