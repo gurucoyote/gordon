@@ -252,9 +252,18 @@ var loopCmd = &cobra.Command{
 	},
 }
 
-func init() {
+var saveCmd = &cobra.Command{
+	Use:   "save [start_marker] [end_marker] [output_file]",
+	Short: "Save the loop between two markers to a file",
+	Long:  `Save the audio loop between two specified markers to a .wav file.`,
+	Args:  cobra.ExactArgs(3),
+	Run: func(cmd *cobra.Command, args []string) {
+		// TODO: Implement saving functionality
+		fmt.Println("Save command is not yet implemented.")
+	},
+}
 	RootCmd.AddCommand(playCmd)
-	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd)
+	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
 }
 
 func seekPos(pos float64) {
