@@ -262,8 +262,9 @@ var saveCmd = &cobra.Command{
 		fmt.Println("Save command is not yet implemented.")
 	},
 }
-	RootCmd.AddCommand(playCmd)
-	RootCmd.AddCommand(pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
+
+func init() {
+	RootCmd.AddCommand(playCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
 }
 
 func seekPos(pos float64) {
