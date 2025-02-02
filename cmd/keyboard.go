@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/eiannone/keyboard"
@@ -62,35 +63,33 @@ func ControlLoop() {
 			// Delegate play/pause toggling to the existing pause subcommand.
 			pauseCmd.Run(pauseCmd, []string{})
 		case key == keyboard.KeyArrowLeft:
-			// Rewind 5 seconds.
-			seekPos(-5.0)
-			ap.play()
-			fmt.Println("Rewinded 5 seconds.")
+			// Rewind 5 seconds via existing subcommand.
+			rewindCmd.Run(rewindCmd, []string{"5"})
 		case key == keyboard.KeyArrowRight:
-			// Forward 5 seconds.
-			seekPos(5.0)
-			ap.play()
-			fmt.Println("Forwarded 5 seconds.")
+			// Forward 5 seconds via existing subcommand.
+			forwardCmd.Run(forwardCmd, []string{"5"})
 		case key == keyboard.KeyArrowUp:
+			// Increase volume via existing subcommand.
 			speaker.Lock()
-			newVol := ap.volume.Volume + 0.1
+			currentVol := ap.volume.Volume
+			speaker.Unlock()
+			newVol := currentVol + 0.1
 			if newVol > 1.0 {
 				newVol = 1.0
 			}
-			ap.volume.Volume = newVol
-			speaker.Unlock()
-			ap.play()
-			fmt.Println("Increased volume.")
+			newPercent := int(newVol * 100)
+			volumeCmd.Run(volumeCmd, []string{strconv.Itoa(newPercent)})
 		case key == keyboard.KeyArrowDown:
+			// Decrease volume via existing subcommand.
 			speaker.Lock()
-			newVol := ap.volume.Volume - 0.1
+			currentVol := ap.volume.Volume
+			speaker.Unlock()
+			newVol := currentVol - 0.1
 			if newVol < 0.0 {
 				newVol = 0.0
 			}
-			ap.volume.Volume = newVol
-			speaker.Unlock()
-			ap.play()
-			fmt.Println("Decreased volume.")
+			newPercent := int(newVol * 100)
+			volumeCmd.Run(volumeCmd, []string{strconv.Itoa(newPercent)})
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
