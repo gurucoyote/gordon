@@ -97,7 +97,12 @@ var keyboardCmd = &cobra.Command{
 			panic(err)
 		}
 		defer keyboard.Close()
-		ControlLoop()
+		done := make(chan bool)
+		go func() {
+			ControlLoop()
+			done <- true
+		}()
+		<-done
 	},
 }
 
