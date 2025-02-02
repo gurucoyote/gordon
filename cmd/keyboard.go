@@ -82,6 +82,8 @@ func ControlLoop() {
 				newPercent = 0
 			}
 			volumeCmd.Run(volumeCmd, []string{strconv.Itoa(newPercent)})
+		default:
+			// Ignore unknown keys.
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
