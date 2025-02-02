@@ -70,25 +70,17 @@ func ControlLoop() {
 			forwardCmd.Run(forwardCmd, []string{"5"})
 		case key == keyboard.KeyArrowUp:
 			// Increase volume via existing subcommand.
-			speaker.Lock()
-			currentVol := ap.volume.Volume
-			speaker.Unlock()
-			newVol := currentVol + 0.1
-			if newVol > 1.0 {
-				newVol = 1.0
+			newPercent := int((ap.volume.Volume + 0.1) * 100)
+			if newPercent > 100 {
+				newPercent = 100
 			}
-			newPercent := int(newVol * 100)
 			volumeCmd.Run(volumeCmd, []string{strconv.Itoa(newPercent)})
 		case key == keyboard.KeyArrowDown:
 			// Decrease volume via existing subcommand.
-			speaker.Lock()
-			currentVol := ap.volume.Volume
-			speaker.Unlock()
-			newVol := currentVol - 0.1
-			if newVol < 0.0 {
-				newVol = 0.0
+			newPercent := int((ap.volume.Volume - 0.1) * 100)
+			if newPercent < 0 {
+				newPercent = 0
 			}
-			newPercent := int(newVol * 100)
 			volumeCmd.Run(volumeCmd, []string{strconv.Itoa(newPercent)})
 		}
 		time.Sleep(100 * time.Millisecond)
