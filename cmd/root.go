@@ -19,7 +19,11 @@ You can use the 'play' command followed by the file path to play a music file.`,
 		speaker.Init(sr, sr.N(time.Second/10))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Put your code here
+		if len(args) == 1 {
+			playCmd.Run(cmd, args)
+		} else {
+			cmd.Help()
+		}
 	},
 }
 
