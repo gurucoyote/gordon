@@ -115,7 +115,6 @@ var keyboardCmd = &cobra.Command{
 	Short: "Enter keyboard control mode (vim-like normal mode for media controls)",
 	Run: func(cmd *cobra.Command, args []string) {
 		// ensure to not interrupt audio playback
-		ap.play()
 		done := make(chan bool)
 		go func() {
 			ControlLoop()

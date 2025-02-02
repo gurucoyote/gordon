@@ -102,7 +102,6 @@ var playCmd = &cobra.Command{
 		// defer streamer.Close()
 
 		ap = newAudioPanel(format.SampleRate, streamer)
-		ap.play()
 		// this should drop us into interactive mode and continue playing
 		return
 	},
@@ -121,7 +120,6 @@ var pauseCmd = &cobra.Command{
 		length := ap.sampleRate.D(ap.streamer.Len())
 		volume := ap.volume.Volume
 		speaker.Unlock()
-		ap.play()
 		positionStatus := fmt.Sprintf("%v / %v", position.Round(time.Second), length.Round(time.Second))
 		volumeStatus := fmt.Sprintf("%.1f", volume)
 		fmt.Println(positionStatus, volumeStatus)
@@ -147,7 +145,6 @@ var rewindCmd = &cobra.Command{
 		relpos = relpos * -1
 		fmt.Printf("rewind command with relative position: %f\n", relpos)
 		seekPos(relpos)
-		ap.play()
 	},
 }
 
@@ -167,7 +164,6 @@ var forwardCmd = &cobra.Command{
 		}
 		fmt.Printf("Forward command with relative position: %f\n", relpos)
 		seekPos(relpos)
-		ap.play()
 	},
 }
 
@@ -189,7 +185,6 @@ var volumeCmd = &cobra.Command{
 		speaker.Lock()
 		ap.volume.Volume = float64(vol) / 100
 		speaker.Unlock()
-		ap.play()
 		fmt.Printf("Volume set to %d%%\n", vol)
 	},
 }
@@ -427,7 +422,6 @@ var posCmd = &cobra.Command{
 		length := ap.sampleRate.D(ap.streamer.Len()).Seconds()
 		volume := ap.volume.Volume
 		speaker.Unlock()
-		ap.play()
 		fmt.Printf("%.3f / %.3f (Volume: %.1f)\n", position, length, volume)
 	},
 }
