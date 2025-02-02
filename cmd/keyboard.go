@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"time"
+	// "time"
 
 	"github.com/eiannone/keyboard"
 	// "github.com/gopxl/beep/speaker"
@@ -85,7 +85,7 @@ func ControlLoop() {
 		default:
 			// Ignore unknown keys.
 		}
-		time.Sleep(100 * time.Millisecond)
+		// time.Sleep(100 * time.Millisecond)
 	}
 }
 
