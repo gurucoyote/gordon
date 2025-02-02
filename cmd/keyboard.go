@@ -61,27 +61,42 @@ func ControlLoop() {
 		switch {
 		case key == keyboard.KeySpace:
 			// Delegate play/pause toggling to the existing pause subcommand.
-			pauseCmd.Run(pauseCmd, []string{})
+			RootCmd.SetArgs([]string{"pause"})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
 		case key == keyboard.KeyArrowLeft:
 			// Rewind 5 seconds via existing subcommand.
-			rewindCmd.Run(rewindCmd, []string{"5"})
+			RootCmd.SetArgs([]string{"rewind", "5"})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
 		case key == keyboard.KeyArrowRight:
 			// Forward 5 seconds via existing subcommand.
-			forwardCmd.Run(forwardCmd, []string{"5"})
+			RootCmd.SetArgs([]string{"forward", "5"})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
 		case key == keyboard.KeyArrowUp:
 			// Increase volume via existing subcommand.
 			newPercent := int((ap.volume.Volume + 0.1) * 100)
 			if newPercent > 100 {
 				newPercent = 100
 			}
-			volumeCmd.Run(volumeCmd, []string{strconv.Itoa(newPercent)})
+			RootCmd.SetArgs([]string{"volume", strconv.Itoa(newPercent)})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
 		case key == keyboard.KeyArrowDown:
 			// Decrease volume via existing subcommand.
 			newPercent := int((ap.volume.Volume - 0.1) * 100)
 			if newPercent < 0 {
 				newPercent = 0
 			}
-			volumeCmd.Run(volumeCmd, []string{strconv.Itoa(newPercent)})
+			RootCmd.SetArgs([]string{"volume", strconv.Itoa(newPercent)})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
 		default:
 			// Ignore unknown keys.
 		}
