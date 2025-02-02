@@ -340,6 +340,7 @@ var saveCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(playCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
+	RootCmd.AddCommand(posCmd)
 }
 
 func seekPos(pos float64) {
@@ -409,4 +410,24 @@ func (l *loopBetween) Stream(samples [][2]float64) (n int, ok bool) {
 
 func (l *loopBetween) Err() error {
 	return l.s.Err()
+}
+
+var posCmd = &cobra.Command{
+	Use:   "pos",
+	Short: "Show playback position",
+	Long:  "Show current playback position and total length in seconds with at least 3 digits of precision",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		if ap == nil {
+			fmt.Println("No audio loaded!")
+			return
+		}
+		speaker.Lock()
+		position := ap.sampleRate.D(ap.streamer.Position()).Seconds()
+		length := ap.sampleRate.D(ap.streamer.Len()).Seconds()
+		volume := ap.volume.Volume
+		speaker.Unlock()
+		ap.play()
+		fmt.Printf("%.3f / %.3f (Volume: %.1f)\n", position, length, volume)
+	},
 }
