@@ -65,6 +65,7 @@ func ControlLoop() {
 			length := ap.sampleRate.D(ap.streamer.Len())
 			volume := ap.volume.Volume
 			speaker.Unlock()
+			time.Sleep(50 * time.Millisecond)
 			ap.play()
 			fmt.Printf("Toggled play/pause: %v / %v (Volume: %.1f)\n", position.Round(time.Second), length.Round(time.Second), volume)
 		case key == keyboard.KeyArrowLeft:
