@@ -61,15 +61,21 @@ func ControlLoop() {
 		case key == keyboard.KeySpace:
 			speaker.Lock()
 			ap.ctrl.Paused = !ap.ctrl.Paused
+			position := ap.sampleRate.D(ap.streamer.Position())
+			length := ap.sampleRate.D(ap.streamer.Len())
+			volume := ap.volume.Volume
 			speaker.Unlock()
-			fmt.Println("Toggled play/pause.")
+			ap.play()
+			fmt.Printf("Toggled play/pause: %v / %v (Volume: %.1f)\n", position.Round(time.Second), length.Round(time.Second), volume)
 		case key == keyboard.KeyArrowLeft:
 			// Rewind 5 seconds.
 			seekPos(-5.0)
+			ap.play()
 			fmt.Println("Rewinded 5 seconds.")
 		case key == keyboard.KeyArrowRight:
 			// Forward 5 seconds.
 			seekPos(5.0)
+			ap.play()
 			fmt.Println("Forwarded 5 seconds.")
 		case key == keyboard.KeyArrowUp:
 			speaker.Lock()
@@ -79,6 +85,7 @@ func ControlLoop() {
 			}
 			ap.volume.Volume = newVol
 			speaker.Unlock()
+			ap.play()
 			fmt.Println("Increased volume.")
 		case key == keyboard.KeyArrowDown:
 			speaker.Lock()
@@ -88,6 +95,7 @@ func ControlLoop() {
 			}
 			ap.volume.Volume = newVol
 			speaker.Unlock()
+			ap.play()
 			fmt.Println("Decreased volume.")
 		}
 		time.Sleep(100 * time.Millisecond)
