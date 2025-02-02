@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"time"
+	// "time"
 
 	"github.com/gopxl/beep/speaker"
 	"github.com/spf13/cobra"

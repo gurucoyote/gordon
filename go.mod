@@ -6,6 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/chzyer/readline v1.5.1
+	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/faiface/beep v1.1.0
 	github.com/gdamore/tcell v1.3.0
 	github.com/gopxl/beep v1.0.0
