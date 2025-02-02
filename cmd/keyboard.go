@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/eiannone/keyboard"
-	"github.com/gopxl/beep/speaker"
+	// "github.com/gopxl/beep/speaker"
 	"github.com/spf13/cobra"
 )
 
