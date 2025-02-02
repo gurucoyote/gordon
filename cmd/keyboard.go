@@ -22,13 +22,13 @@ func commandMode() {
 
 // ControlLoop starts in normal mode where keys control media playback.
 // In normal mode:
-//   • Space toggles play/pause
-//   • Left Arrow rewinds 5 seconds
-//   • Right Arrow forwards 5 seconds
-//   • Up Arrow increases volume
-//   • Down Arrow decreases volume
-//   • ':' enters command mode
-//   • Q exits keyboard control mode
+//   - Space toggles play/pause
+//   - Left Arrow rewinds 5 seconds
+//   - Right Arrow forwards 5 seconds
+//   - Up Arrow increases volume
+//   - Down Arrow decreases volume
+//   - ':' enters command mode
+//   - Q exits keyboard control mode
 func ControlLoop() {
 	fmt.Println("Keyboard Control Mode (Normal Mode):")
 	fmt.Println("  Space       : Toggle play/pause")
@@ -39,8 +39,14 @@ func ControlLoop() {
 	fmt.Println("  :           : Enter command mode")
 	fmt.Println("  Q           : Quit control mode")
 
+	// Using GetKey()
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
+	defer func() { _ = keyboard.Close() }()
+
 	for {
-		char, key, err := keyboard.GetSingleKey()
+		char, key, err := keyboard.GetKey()
 		if err != nil {
 			panic(err)
 		}
@@ -108,16 +114,15 @@ var keyboardCmd = &cobra.Command{
 	Use:   "keyboard",
 	Short: "Enter keyboard control mode (vim-like normal mode for media controls)",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := keyboard.Open(); err != nil {
-			panic(err)
-		}
-		defer keyboard.Close()
+		// ensure to not interrupt audio playback
+		ap.play()
 		done := make(chan bool)
 		go func() {
 			ControlLoop()
 			done <- true
 		}()
 		<-done
+		return
 	},
 }
 
