@@ -59,20 +59,8 @@ func ControlLoop() {
 		}
 		switch {
 		case key == keyboard.KeySpace:
-			speaker.Lock()
-			wasPaused := ap.ctrl.Paused
-			ap.ctrl.Paused = !ap.ctrl.Paused
-			position := ap.sampleRate.D(ap.streamer.Position())
-			length := ap.sampleRate.D(ap.streamer.Len())
-			volume := ap.volume.Volume
-			speaker.Unlock()
-			if wasPaused {
-				time.Sleep(50 * time.Millisecond)
-				ap.play()
-				fmt.Printf("Resumed playback: %v / %v (Volume: %.1f)\n", position.Round(time.Second), length.Round(time.Second), volume)
-			} else {
-				fmt.Printf("Paused playback: %v / %v (Volume: %.1f)\n", position.Round(time.Second), length.Round(time.Second), volume)
-			}
+			// Delegate play/pause toggling to the existing pause subcommand.
+			pauseCmd.Run(pauseCmd, []string{})
 		case key == keyboard.KeyArrowLeft:
 			// Rewind 5 seconds.
 			seekPos(-5.0)
