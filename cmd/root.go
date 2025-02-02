@@ -19,6 +19,11 @@ You can use the 'play' command followed by the file path to play a music file.`,
 		sr := beep.SampleRate(44100)
 		speaker.Init(sr, sr.N(time.Second/10))
 	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		if ap != nil {
+			ap.play()
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 1 {
 			playCmd.Run(cmd, args)
