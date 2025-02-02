@@ -1,23 +1,25 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strconv"
-	// "time"
+	"strings"
 
 	"github.com/eiannone/keyboard"
+	"github.com/chzyer/readline"
 	// "github.com/gopxl/beep/speaker"
 	"github.com/spf13/cobra"
 )
 
 // commandMode prompts the user for a full command input similar to vim's command mode.
 func commandMode() {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Command Mode - Enter command: ")
-	command, _ := reader.ReadString('\n')
-	fmt.Printf("Command entered: %s\r\n", command)
+	// enter repl loop
+	rl, _ := readline.New("> ")
+	defer rl.Close()
+	input, _ := rl.Readline()
+	args := strings.Fields(input)
+	RootCmd.SetArgs(args)
+	RootCmd.Execute()
 }
 
 // ControlLoop starts in normal mode where keys control media playback.
