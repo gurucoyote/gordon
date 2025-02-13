@@ -26,17 +26,14 @@ You can use the 'play' command followed by the file path to play a music file.`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 1 {
-			playCmd.Run(cmd, args)
+			loadCmd.Run(cmd, args)
 		} else {
 			cmd.Help()
 		}
 	},
 }
 
-var Interactive bool
-
 func init() {
-	RootCmd.PersistentFlags().BoolVarP(&Interactive, "interactive", "i", false, "Start the interactive mode for the app")
 	RootCmd.AddCommand(exitCmd)
 }
 

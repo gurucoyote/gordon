@@ -52,15 +52,12 @@ func (ap *audioPanel) play() {
 
 var ap *audioPanel
 
-var playCmd = &cobra.Command{
-	Use:   "play [file]",
-	Short: "Play a music file",
-	Long:  `Play a music file. The file must be in either mp3, flac, or wav format.`,
+var loadCmd = &cobra.Command{
+	Use:   "load [file]",
+	Short: "load a music file",
+	Long:  `load a music file. The file must be in either mp3, flac, or wav format.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// make sure we get to enter commands after playback starts
-		// also, this will 'block' so that the sound can play before the program ends
-		Interactive = true
 		// load the file
 		file := args[0]
 		if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -102,7 +99,6 @@ var playCmd = &cobra.Command{
 		// defer streamer.Close()
 
 		ap = newAudioPanel(format.SampleRate, streamer)
-		// this should drop us into interactive mode and continue playing
 		return
 	},
 }
@@ -334,7 +330,7 @@ var saveCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(playCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
+	RootCmd.AddCommand(loadCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
 	RootCmd.AddCommand(posCmd)
 }
 
