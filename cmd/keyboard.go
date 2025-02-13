@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eiannone/keyboard"
 	"github.com/chzyer/readline"
+	"github.com/eiannone/keyboard"
 	// "github.com/gopxl/beep/speaker"
 	"github.com/spf13/cobra"
 )
@@ -32,10 +32,11 @@ func commandMode() {
 //   - ':' enters command mode
 //   - Q exits keyboard control mode
 func ControlLoop() {
+	JumpSec := "1"
 	fmt.Println("Keyboard Control Mode (Normal Mode):")
 	fmt.Println("  Space       : Toggle play/pause")
-	fmt.Println("  Left Arrow  : Rewind 5 seconds")
-	fmt.Println("  Right Arrow : Forward 5 seconds")
+	fmt.Printf("  Left Arrow  : Rewind %s seconds\n", JumpSec)
+	fmt.Printf("  Right Arrow : Forward %s seconds\n", JumpSec)
 	fmt.Println("  Up Arrow    : Increase volume")
 	fmt.Println("  Down Arrow  : Decrease volume")
 	fmt.Println("  :           : Enter command mode")
@@ -53,12 +54,15 @@ func ControlLoop() {
 			panic(err)
 		}
 		if char == 'q' || char == 'Q' {
-			fmt.Println("Exiting keyboard control mode.")
+			RootCmd.SetArgs([]string{"exit"})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
 			break
 		}
 		if char == ':' {
 			commandMode()
-			fmt.Println("Resuming Normal Mode...")
+			// fmt.Println("Resuming Normal Mode...")
 			continue
 		}
 		// Ensure an audio file is loaded (global variable ap from play.go)
@@ -74,14 +78,13 @@ func ControlLoop() {
 				fmt.Println(err)
 			}
 		case key == keyboard.KeyArrowLeft:
-			// Rewind 5 seconds via existing subcommand.
-			RootCmd.SetArgs([]string{"rewind", "5"})
+			// Rewind .5 seconds via existing subcommand.
+			RootCmd.SetArgs([]string{"rewind", JumpSec})
 			if err := RootCmd.Execute(); err != nil {
 				fmt.Println(err)
 			}
-		case key == keyboard.KeyArrowRight:
-			// Forward 5 seconds via existing subcommand.
-			RootCmd.SetArgs([]string{"forward", "5"})
+		case key == keyboard.KeyArrowRight: // Forward .5 seconds via existing subcommand.
+			RootCmd.SetArgs([]string{"forward", JumpSec})
 			if err := RootCmd.Execute(); err != nil {
 				fmt.Println(err)
 			}
@@ -116,13 +119,7 @@ var keyboardCmd = &cobra.Command{
 	Use:   "keyboard",
 	Short: "Enter keyboard control mode (vim-like normal mode for media controls)",
 	Run: func(cmd *cobra.Command, args []string) {
-		// ensure to not interrupt audio playback
-		done := make(chan bool)
-		go func() {
-			ControlLoop()
-			done <- true
-		}()
-		<-done
+		ControlLoop()
 		return
 	},
 }
