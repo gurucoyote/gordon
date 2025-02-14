@@ -61,7 +61,11 @@ func ControlLoop() {
 			break
 		}
 		if char == ':' {
+			keyboard.Close()
 			commandMode()
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
 			// fmt.Println("Resuming Normal Mode...")
 			continue
 		}
