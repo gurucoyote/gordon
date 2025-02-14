@@ -340,7 +340,7 @@ var saveCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(loadCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
-	RootCmd.AddCommand(posCmd)
+	RootCmd.AddCommand(posCmd, loopStatusCmd)
 }
 
 func seekPos(pos float64) {
@@ -410,6 +410,35 @@ func (l *loopBetween) Stream(samples [][2]float64) (n int, ok bool) {
 
 func (l *loopBetween) Err() error {
 	return l.s.Err()
+}
+
+var loopStatusCmd = &cobra.Command{
+	Use:   "loopstatus",
+	Short: "Show current loop boundaries (markers or positions)",
+	Run: func(cmd *cobra.Command, args []string) {
+		if ap == nil {
+			fmt.Println("No audio loaded!")
+			return
+		}
+		// Look for matching marker indices
+		var startMarker, endMarker string
+		for i, marker := range Markers {
+			if marker.SamplePosition == ap.loop.start {
+				startMarker = strconv.Itoa(i)
+			}
+			if marker.SamplePosition == ap.loop.end {
+				endMarker = strconv.Itoa(i)
+			}
+		}
+		// If no matching markers found, display the playback positions in seconds.
+		if startMarker == "" {
+			startMarker = fmt.Sprintf("%.2f sec", ap.sampleRate.D(ap.loop.start).Seconds())
+		}
+		if endMarker == "" {
+			endMarker = fmt.Sprintf("%.2f sec", ap.sampleRate.D(ap.loop.end).Seconds())
+		}
+		fmt.Printf("Currently looping between %s and %s\n", startMarker, endMarker)
+	},
 }
 
 var posCmd = &cobra.Command{
