@@ -99,6 +99,15 @@ var loadCmd = &cobra.Command{
 		// defer streamer.Close()
 
 		ap = newAudioPanel(format.SampleRate, streamer)
+		Markers = make([]PlaybackPosition, 10)
+		Markers[0] = PlaybackPosition{
+			SamplePosition: 0,
+			PlayPosition:   0.0,
+		}
+		Markers[9] = PlaybackPosition{
+			SamplePosition: streamer.Len() - 1,
+			PlayPosition:   format.SampleRate.D(streamer.Len() - 1).Seconds(),
+		}
 		return
 	},
 }
