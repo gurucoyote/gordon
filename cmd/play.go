@@ -244,7 +244,8 @@ var gotoCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
-		fmt.Printf("Go to marker %d\n", markerIndex)
+		playPos := ap.sampleRate.D(marker.SamplePosition).Seconds()
+		fmt.Printf("Jumped to marker %d (play position: %.2f sec)\n", markerIndex, playPos)
 	},
 }
 
