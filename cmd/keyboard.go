@@ -53,6 +53,27 @@ func ControlLoop() {
 		if err != nil {
 			panic(err)
 		}
+		if char == 'l' {
+			c1, _, err := keyboard.GetKey()
+			if err != nil {
+				panic(err)
+			}
+			if c1 < '0' || c1 > '9' {
+				continue // ignore if not a valid digit
+			}
+			c2, _, err := keyboard.GetKey()
+			if err != nil {
+				panic(err)
+			}
+			if c2 < '0' || c2 > '9' {
+				continue // ignore if not a valid digit
+			}
+			RootCmd.SetArgs([]string{"loop", string(c1), string(c2)})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
+			continue
+		}
 		if char >= '1' && char <= '9' {
 			RootCmd.SetArgs([]string{"setmarker", string(char)})
 			if err := RootCmd.Execute(); err != nil {
