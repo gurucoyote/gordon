@@ -74,6 +74,20 @@ func ControlLoop() {
 			}
 			continue
 		}
+		if char == 'g' {
+			digit, _, err := keyboard.GetKey()
+			if err != nil {
+				panic(err)
+			}
+			if digit < '0' || digit > '9' {
+				continue // ignore if not a valid digit
+			}
+			RootCmd.SetArgs([]string{"goto", string(digit)})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
+			continue
+		}
 		if char >= '1' && char <= '9' {
 			RootCmd.SetArgs([]string{"setmarker", string(char)})
 			if err := RootCmd.Execute(); err != nil {
@@ -91,9 +105,9 @@ func ControlLoop() {
 		if char == ':' {
 			keyboard.Close()
 			commandMode()
-	if err := keyboard.Open(); err != nil {
-		panic(err)
-	}
+			if err := keyboard.Open(); err != nil {
+				panic(err)
+			}
 			// fmt.Println("Resuming Normal Mode...")
 			continue
 		}
