@@ -53,6 +53,13 @@ func ControlLoop() {
 		if err != nil {
 			panic(err)
 		}
+		if char >= '1' && char <= '9' {
+			RootCmd.SetArgs([]string{"setmarker", string(char)})
+			if err := RootCmd.Execute(); err != nil {
+				fmt.Println(err)
+			}
+			continue
+		}
 		if char == 'q' || char == 'Q' {
 			RootCmd.SetArgs([]string{"exit"})
 			if err := RootCmd.Execute(); err != nil {
