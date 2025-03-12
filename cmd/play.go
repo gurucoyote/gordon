@@ -271,8 +271,6 @@ var loopCmd = &cobra.Command{
 		ap.loop.start = startPos
 		ap.loop.end = endPos
 		speaker.Unlock()
-		ap.play()
-
 	},
 }
 
