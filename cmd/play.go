@@ -164,8 +164,8 @@ var loadCmd = &cobra.Command{
 				format = decodedFormat
 				mts = NewMultiTrackSeeker([]beep.StreamSeeker{}, initFormat)
 			}
-			mts.AddTrack(streamer, file)
-			fmt.Printf("Loaded file: %s\n", file)
+			trackNum := mts.AddTrack(streamer, file)
+			fmt.Printf("Loaded file: %s as track %d\n", file, trackNum)
 		}
 		if ap == nil {
 			ap = newAudioPanel(initFormat.SampleRate, mts)

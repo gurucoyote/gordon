@@ -19,7 +19,7 @@ type MultiTrackSeeker struct {
 	length   int
 }
 
-func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) {
+func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) int {
 	nextTrackNumber := 1
 	for _, t := range mts.Tracks {
 		if t.TrackNumber >= nextTrackNumber {
@@ -36,6 +36,7 @@ func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) 
 	if track.Len() > mts.length {
 		mts.length = track.Len()
 	}
+	return newTrack.TrackNumber
 }
 
 func (mts *MultiTrackSeeker) RemoveTrack(index int) error {
