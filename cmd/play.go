@@ -61,8 +61,15 @@ var loadCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var mts *MultiTrackSeeker
 		var initFormat beep.Format
+		// if an audio panel is already active, reuse its MultiTrackSeeker
+		if ap != nil {
+			if existing, ok := ap.streamer.(*MultiTrackSeeker); ok {
+				mts = existing
+				initFormat = format
+			}
+		}
 		// iterate over each provided file
-		for i, file := range args {
+		for _, file := range args {
 			if _, err := os.Stat(file); os.IsNotExist(err) {
 				fmt.Printf("File %s does not exist\n", file)
 				return
@@ -91,7 +98,8 @@ var loadCmd = &cobra.Command{
 				fmt.Printf("Failed to decode file %s: %s\n", file, err)
 				return
 			}
-			if i == 0 {
+			// initialize MultiTrackSeeker if not already present
+			if mts == nil {
 				initFormat = decodedFormat
 				format = decodedFormat
 				mts = NewMultiTrackSeeker([]beep.StreamSeeker{}, initFormat)
@@ -99,15 +107,17 @@ var loadCmd = &cobra.Command{
 			mts.AddTrack(streamer)
 			fmt.Printf("Loaded file: %s\n", file)
 		}
-		ap = newAudioPanel(initFormat.SampleRate, mts)
-		Markers = make([]PlaybackPosition, 10)
-		Markers[0] = PlaybackPosition{
-			SamplePosition: 0,
-			PlayPosition:   0.0,
-		}
-		Markers[9] = PlaybackPosition{
-			SamplePosition: mts.Len() - 1,
-			PlayPosition:   initFormat.SampleRate.D(mts.Len() - 1).Seconds(),
+		if ap == nil {
+			ap = newAudioPanel(initFormat.SampleRate, mts)
+			Markers = make([]PlaybackPosition, 10)
+			Markers[0] = PlaybackPosition{
+				SamplePosition: 0,
+				PlayPosition:   0.0,
+			}
+			Markers[9] = PlaybackPosition{
+				SamplePosition: mts.Len() - 1,
+				PlayPosition:   initFormat.SampleRate.D(mts.Len() - 1).Seconds(),
+			}
 		}
 		return
 	},
