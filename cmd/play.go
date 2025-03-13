@@ -338,7 +338,7 @@ var saveCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(loadCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd)
+	RootCmd.AddCommand(loadCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd, speedCmd)
 	RootCmd.AddCommand(posCmd, loopStatusCmd)
 }
 
