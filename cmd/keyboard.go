@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -136,7 +137,8 @@ func ControlLoop() {
 			}
 		case key == keyboard.KeyArrowUp:
 			// Increase volume via existing subcommand.
-			newPercent := int((ap.volume.Volume + 0.1) * 100)
+			currentPercent := int(math.Pow(ap.volume.Base, ap.volume.Volume) * 100)
+			newPercent := currentPercent + 10
 			if newPercent > 100 {
 				newPercent = 100
 			}
@@ -146,7 +148,8 @@ func ControlLoop() {
 			}
 		case key == keyboard.KeyArrowDown:
 			// Decrease volume via existing subcommand.
-			newPercent := int((ap.volume.Volume - 0.1) * 100)
+			currentPercent := int(math.Pow(ap.volume.Base, ap.volume.Volume) * 100)
+			newPercent := currentPercent - 10
 			if newPercent < 0 {
 				newPercent = 0
 			}
