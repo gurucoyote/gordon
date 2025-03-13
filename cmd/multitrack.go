@@ -31,8 +31,12 @@ func (mts *MultiTrackSeeker) AddTrackWithOffset(track beep.StreamSeeker, fileNam
 	// Create silence streamer for the offset duration.
 	silenceSamples := mts.format.SampleRate.N(time.Duration(offset * float64(time.Second)))
 	silenceStreamer := beep.Silence(silenceSamples)
-	// Combine silence with the actual track.
-	composite := beep.Seq(silenceStreamer, track)
+	// Combine silence with the actual track using a CompositeSeeker.
+	composite := &CompositeSeeker{
+		silenceLen: silenceSamples,
+		track:      track,
+		pos:        0,
+	}
 
 	newTrack := Track{
 		Streamer:    composite,
@@ -120,6 +124,55 @@ func (mts *MultiTrackSeeker) Position() int {
 
 func (mts *MultiTrackSeeker) Err() error {
 	return nil
+}
+
+type CompositeSeeker struct {
+	silenceLen int
+	track      beep.StreamSeeker
+	pos        int
+}
+
+func (cs *CompositeSeeker) Stream(samples [][2]float64) (n int, ok bool) {
+	total := len(samples)
+	if cs.pos < cs.silenceLen {
+		silenceRemaining := cs.silenceLen - cs.pos
+		nSilence := total
+		if silenceRemaining < total {
+			nSilence = silenceRemaining
+		}
+		for i := 0; i < nSilence; i++ {
+			samples[i][0] = 0
+			samples[i][1] = 0
+		}
+		cs.pos += nSilence
+		n += nSilence
+		if nSilence < total {
+			nTrack, okTrack := cs.track.Stream(samples[nSilence:])
+			n += nTrack
+			cs.pos += nTrack
+			return n, okTrack
+		}
+		return n, true
+	} else {
+		nTrack, okTrack := cs.track.Stream(samples)
+		cs.pos += nTrack
+		return nTrack, okTrack
+	}
+}
+
+func (cs *CompositeSeeker) Seek(p int) error {
+	if p < 0 || p > cs.Len() {
+		return fmt.Errorf("seek position out of range")
+	}
+	cs.pos = p
+	if p < cs.silenceLen {
+		return cs.track.Seek(0)
+	}
+	return cs.track.Seek(p - cs.silenceLen)
+}
+
+func (cs *CompositeSeeker) Len() int {
+	return cs.silenceLen + cs.track.Len()
 }
 
 func NewMultiTrackSeeker(streams []beep.StreamSeeker, format beep.Format) *MultiTrackSeeker {
