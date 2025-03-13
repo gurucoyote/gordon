@@ -37,7 +37,7 @@ func newAudioPanel(sampleRate beep.SampleRate, streamer beep.StreamSeeker) *audi
 	loop := LoopBetween(-1, 0, streamer.Len(), streamer)
 	ctrl := &beep.Ctrl{Streamer: loop}
 	resampler := beep.ResampleRatio(4, 1, ctrl)
-	volume := &effects.Volume{Streamer: ctrl, Base: 2}
+	volume := &effects.Volume{Streamer: resampler, Base: 2}
 	return &audioPanel{sampleRate,
 		streamer,
 		ctrl,
