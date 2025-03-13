@@ -47,7 +47,10 @@ var listTracksCmd = &cobra.Command{
 			return
 		}
 		for _, t := range mts.Tracks {
-			fmt.Printf("Track %d: %s (length: %d samples)\n", t.TrackNumber, t.TrackName, t.Streamer.Len())
+			durationSec := float64(t.Streamer.Len()) / float64(format.SampleRate)
+			minutes := int(durationSec) / 60
+			seconds := int(durationSec) % 60
+			fmt.Printf("Track %d: %s (length: %02d:%02d)\n", t.TrackNumber, t.TrackName, minutes, seconds)
 		}
 	},
 }
