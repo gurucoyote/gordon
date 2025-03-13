@@ -59,6 +59,10 @@ func (mts *MultiTrackSeeker) Position() int {
 	return mts.position
 }
 
+func (mts *MultiTrackSeeker) Err() error {
+	return nil
+}
+
 func NewMultiTrackSeeker(tracks []beep.StreamSeeker, format beep.Format) *MultiTrackSeeker {
 	length := 0
 	for _, track := range tracks {
