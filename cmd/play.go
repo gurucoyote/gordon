@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+	"math"
 
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/effects"
@@ -188,7 +189,7 @@ var volumeCmd = &cobra.Command{
 			return
 		}
 		speaker.Lock()
-		ap.volume.Volume = float64(vol) / 100
+		ap.volume.Volume = math.Log(float64(vol)/100) / math.Log(ap.volume.Base)
 		speaker.Unlock()
 		fmt.Printf("Volume set to %d%%\n", vol)
 	},
