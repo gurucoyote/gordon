@@ -55,6 +55,44 @@ var listTracksCmd = &cobra.Command{
 	},
 }
 
+var dropCmd = &cobra.Command{
+	Use:   "drop [track number]",
+	Short: "Remove a track from playback using its track number",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		trackNum, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Printf("Failed to parse track number: %s\n", err)
+			return
+		}
+		if ap == nil {
+			fmt.Println("No audio loaded!")
+			return
+		}
+		mts, ok := ap.streamer.(*MultiTrackSeeker)
+		if !ok {
+			fmt.Println("Current streamer is not a MultiTrackSeeker")
+			return
+		}
+		indexToRemove := -1
+		for i, t := range mts.Tracks {
+			if t.TrackNumber == trackNum {
+				indexToRemove = i
+				break
+			}
+		}
+		if indexToRemove == -1 {
+			fmt.Printf("Track number %d not found\n", trackNum)
+			return
+		}
+		if err := mts.RemoveTrack(indexToRemove); err != nil {
+			fmt.Printf("Failed to remove track: %s\n", err)
+			return
+		}
+		fmt.Printf("Removed track number %d\n", trackNum)
+	},
+}
+
 func newAudioPanel(sampleRate beep.SampleRate, streamer beep.StreamSeeker) *audioPanel {
 	// ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer)}
 	loop := LoopBetween(-1, 0, streamer.Len(), streamer)
@@ -372,7 +410,7 @@ var saveCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(loadCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd, speedCmd)
-	RootCmd.AddCommand(posCmd, loopStatusCmd, speedCmd, listTracksCmd)
+	RootCmd.AddCommand(posCmd, loopStatusCmd, speedCmd, listTracksCmd, dropCmd)
 }
 
 func seekPos(pos float64) {
