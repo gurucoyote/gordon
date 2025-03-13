@@ -50,7 +50,7 @@ var listTracksCmd = &cobra.Command{
 			durationSec := float64(t.Streamer.Len()) / float64(format.SampleRate)
 			minutes := int(durationSec) / 60
 			seconds := int(durationSec) % 60
-			fmt.Printf("Track %d: %s (length: %02d:%02d)\n", t.TrackNumber, t.TrackName, minutes, seconds)
+			fmt.Printf("Track %d: %s (length: %02d:%02d, offset: %.2f sec)\n", t.TrackNumber, t.TrackName, minutes, seconds, t.Offset)
 		}
 	},
 }
