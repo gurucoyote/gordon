@@ -185,6 +185,10 @@ func (cs *CompositeSeeker) Err() error {
 	return nil
 }
 
+func (cs *CompositeSeeker) Position() int {
+	return cs.pos
+}
+
 func NewMultiTrackSeeker(streams []beep.StreamSeeker, format beep.Format) *MultiTrackSeeker {
 	length := 0
 	tracks := make([]Track, 0, len(streams))
