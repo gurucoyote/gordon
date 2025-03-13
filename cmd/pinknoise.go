@@ -4,8 +4,6 @@ import (
 	"math/bits"
 	"math/rand"
 	"time"
-
-	"github.com/gopxl/beep"
 )
 
  // PinkNoise implements beep.Streamer and generates pink noise using the Voss–McCartney algorithm.
