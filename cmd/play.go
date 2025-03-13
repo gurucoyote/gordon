@@ -99,7 +99,9 @@ var loadCmd = &cobra.Command{
 		fmt.Println(format)
 		// defer streamer.Close()
 
-		ap = newAudioPanel(format.SampleRate, NewMultiTrackSeeker([]beep.StreamSeeker{streamer}, format))
+		mts := NewMultiTrackSeeker([]beep.StreamSeeker{}, format)
+		mts.AddTrack(streamer)
+		ap = newAudioPanel(format.SampleRate, mts)
 		Markers = make([]PlaybackPosition, 10)
 		Markers[0] = PlaybackPosition{
 			SamplePosition: 0,
