@@ -13,6 +13,29 @@ type MultiTrackSeeker struct {
 	length   int
 }
 
+func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker) {
+	mts.tracks = append(mts.tracks, track)
+	// Update the overall length if the added track is longer.
+	if track.Len() > mts.length {
+		mts.length = track.Len()
+	}
+}
+
+func (mts *MultiTrackSeeker) RemoveTrack(index int) error {
+	if index < 0 || index >= len(mts.tracks) {
+		return fmt.Errorf("track index %d out of range", index)
+	}
+	mts.tracks = append(mts.tracks[:index], mts.tracks[index+1:]...)
+	// Recalculate the overall length based on the remaining tracks.
+	mts.length = 0
+	for _, track := range mts.tracks {
+		if track.Len() > mts.length {
+			mts.length = track.Len()
+		}
+	}
+	return nil
+}
+
 func (mts *MultiTrackSeeker) Stream(samples [][2]float64) (n int, ok bool) {
 	if mts.position >= mts.length {
 		return 0, false
