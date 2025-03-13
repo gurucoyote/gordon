@@ -54,62 +54,60 @@ func (ap *audioPanel) play() {
 var ap *audioPanel
 
 var loadCmd = &cobra.Command{
-	Use:   "load [file]",
-	Short: "load a music file",
-	Long:  `load a music file. The file must be in either mp3, flac, or wav format.`,
-	Args:  cobra.ExactArgs(1),
+	Use:   "load [file...]",
+	Short: "load one or more music files",
+	Long:  `load one or more music files. Each file must be in either mp3, flac, wav, or ogg format.`,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// load the file
-		file := args[0]
-		if _, err := os.Stat(file); os.IsNotExist(err) {
-			fmt.Printf("File %s does not exist\n", file)
-			return
+		var mts *MultiTrackSeeker
+		var initFormat beep.Format
+		// iterate over each provided file
+		for i, file := range args {
+			if _, err := os.Stat(file); os.IsNotExist(err) {
+				fmt.Printf("File %s does not exist\n", file)
+				return
+			}
+			f, err := os.Open(file)
+			if err != nil {
+				fmt.Printf("Failed to open file %s: %s\n", file, err)
+				return
+			}
+			var streamer beep.StreamSeeker
+			var decodedFormat beep.Format
+			switch {
+			case strings.HasSuffix(file, ".mp3"):
+				streamer, decodedFormat, err = mp3.Decode(f)
+			case strings.HasSuffix(file, ".wav"):
+				streamer, decodedFormat, err = wav.Decode(f)
+			case strings.HasSuffix(file, ".flac"):
+				streamer, decodedFormat, err = flac.Decode(f)
+			case strings.HasSuffix(file, ".ogg"):
+				streamer, decodedFormat, err = vorbis.Decode(f)
+			default:
+				fmt.Printf("Unsupported file format: %s\n", file)
+				return
+			}
+			if err != nil {
+				fmt.Printf("Failed to decode file %s: %s\n", file, err)
+				return
+			}
+			if i == 0 {
+				initFormat = decodedFormat
+				format = decodedFormat
+				mts = NewMultiTrackSeeker([]beep.StreamSeeker{}, initFormat)
+			}
+			mts.AddTrack(streamer)
+			fmt.Printf("Loaded file: %s\n", file)
 		}
-
-		// Open the file
-		f, err := os.Open(file)
-		if err != nil {
-			fmt.Printf("Failed to open file: %s\n", err)
-			return
-		}
-
-		// Determine the file type and decode accordingly
-		var streamer beep.StreamSeeker
-		var decodedFormat beep.Format
-
-		switch {
-		case strings.HasSuffix(file, ".mp3"):
-			streamer, decodedFormat, err = mp3.Decode(f)
-		case strings.HasSuffix(file, ".wav"):
-			streamer, decodedFormat, err = wav.Decode(f)
-		case strings.HasSuffix(file, ".flac"):
-			streamer, decodedFormat, err = flac.Decode(f)
-		case strings.HasSuffix(file, ".ogg"):
-			streamer, decodedFormat, err = vorbis.Decode(f)
-		default:
-			fmt.Printf("Unsupported file format: %s\n", file)
-			return
-		}
-		format = decodedFormat
-		if err != nil {
-			fmt.Printf("Failed to decode file: %s\n", err)
-			return
-		}
-		// what info do we get here?
-		fmt.Println(format)
-		// defer streamer.Close()
-
-		mts := NewMultiTrackSeeker([]beep.StreamSeeker{}, format)
-		mts.AddTrack(streamer)
-		ap = newAudioPanel(format.SampleRate, mts)
+		ap = newAudioPanel(initFormat.SampleRate, mts)
 		Markers = make([]PlaybackPosition, 10)
 		Markers[0] = PlaybackPosition{
 			SamplePosition: 0,
 			PlayPosition:   0.0,
 		}
 		Markers[9] = PlaybackPosition{
-			SamplePosition: streamer.Len() - 1,
-			PlayPosition:   format.SampleRate.D(streamer.Len() - 1).Seconds(),
+			SamplePosition: mts.Len() - 1,
+			PlayPosition:   initFormat.SampleRate.D(mts.Len() - 1).Seconds(),
 		}
 		return
 	},
