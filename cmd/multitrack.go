@@ -98,15 +98,8 @@ func (mts *MultiTrackSeeker) Seek(p int) error {
 		return fmt.Errorf("seek position out of range")
 	}
 	for _, t := range mts.Tracks {
-		offsetSamples := mts.format.SampleRate.N(time.Duration(t.Offset * float64(time.Second)))
-		effectivePos := p - offsetSamples
-		if effectivePos < 0 {
-			effectivePos = 0
-		}
-		if effectivePos < t.Streamer.Len() {
-			if err := t.Streamer.Seek(effectivePos); err != nil {
-				return err
-			}
+		if err := t.Streamer.Seek(p); err != nil {
+			return err
 		}
 	}
 	mts.position = p
