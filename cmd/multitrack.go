@@ -10,6 +10,7 @@ type Track struct {
 	Streamer    beep.StreamSeeker
 	TrackNumber int
 	TrackName   string
+	Offset      float64
 }
 
 type MultiTrackSeeker struct {
@@ -19,7 +20,7 @@ type MultiTrackSeeker struct {
 	length   int
 }
 
-func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) int {
+func (mts *MultiTrackSeeker) AddTrackWithOffset(track beep.StreamSeeker, fileName string, offset float64) int {
 	nextTrackNumber := 1
 	for _, t := range mts.Tracks {
 		if t.TrackNumber >= nextTrackNumber {
@@ -30,11 +31,12 @@ func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) 
 		Streamer:    track,
 		TrackNumber: nextTrackNumber,
 		TrackName:   fileName,
+		Offset:      offset,
 	}
 	mts.Tracks = append(mts.Tracks, newTrack)
-	// Update the overall length if the added track is longer.
-	if track.Len() > mts.length {
-		mts.length = track.Len()
+	newLength := mts.format.SampleRate.N(time.Duration(offset * float64(time.Second))) + track.Len()
+	if newLength > mts.length {
+		mts.length = newLength
 	}
 	return newTrack.TrackNumber
 }
@@ -65,12 +67,21 @@ func (mts *MultiTrackSeeker) Stream(samples [][2]float64) (n int, ok bool) {
 	}
 
 	for _, t := range mts.Tracks {
-		if mts.position < t.Streamer.Len() {
-			nTrack, _ := t.Streamer.Stream(buffer)
-			for i := 0; i < nTrack && i < len(samples); i++ {
-				samples[i][0] += buffer[i][0]
-				samples[i][1] += buffer[i][1]
-			}
+		offsetSamples := mts.format.SampleRate.N(time.Duration(t.Offset * float64(time.Second)))
+		if mts.position < offsetSamples {
+			// Track hasn't started yet; contribute silence.
+			continue
+		}
+		effectivePos := mts.position - offsetSamples
+		if effectivePos >= t.Streamer.Len() {
+			// Track finished; contribute silence.
+			continue
+		}
+		t.Streamer.Seek(effectivePos)
+		nTrack, _ := t.Streamer.Stream(buffer)
+		for i := 0; i < nTrack && i < len(samples); i++ {
+			samples[i][0] += buffer[i][0]
+			samples[i][1] += buffer[i][1]
 		}
 	}
 	mts.position += len(samples)
@@ -82,8 +93,13 @@ func (mts *MultiTrackSeeker) Seek(p int) error {
 		return fmt.Errorf("seek position out of range")
 	}
 	for _, t := range mts.Tracks {
-		if p < t.Streamer.Len() {
-			if err := t.Streamer.Seek(p); err != nil {
+		offsetSamples := mts.format.SampleRate.N(time.Duration(t.Offset * float64(time.Second)))
+		effectivePos := p - offsetSamples
+		if effectivePos < 0 {
+			effectivePos = 0
+		}
+		if effectivePos < t.Streamer.Len() {
+			if err := t.Streamer.Seek(effectivePos); err != nil {
 				return err
 			}
 		}
