@@ -6,15 +6,26 @@ import (
 	"github.com/gopxl/beep"
 )
 
+type Track struct {
+	Streamer    beep.StreamSeeker
+	TrackNumber int
+	TrackName   string
+}
+
 type MultiTrackSeeker struct {
-	tracks   []beep.StreamSeeker
+	Tracks   []Track
 	format   beep.Format
 	position int
 	length   int
 }
 
 func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker) {
-	mts.tracks = append(mts.tracks, track)
+	newTrack := Track{
+		Streamer:    track,
+		TrackNumber: len(mts.Tracks) + 1,
+		TrackName:   fmt.Sprintf("Track %d", len(mts.Tracks)+1),
+	}
+	mts.Tracks = append(mts.Tracks, newTrack)
 	// Update the overall length if the added track is longer.
 	if track.Len() > mts.length {
 		mts.length = track.Len()
@@ -22,15 +33,15 @@ func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker) {
 }
 
 func (mts *MultiTrackSeeker) RemoveTrack(index int) error {
-	if index < 0 || index >= len(mts.tracks) {
+	if index < 0 || index >= len(mts.Tracks) {
 		return fmt.Errorf("track index %d out of range", index)
 	}
-	mts.tracks = append(mts.tracks[:index], mts.tracks[index+1:]...)
+	mts.Tracks = append(mts.Tracks[:index], mts.Tracks[index+1:]...)
 	// Recalculate the overall length based on the remaining tracks.
 	mts.length = 0
-	for _, track := range mts.tracks {
-		if track.Len() > mts.length {
-			mts.length = track.Len()
+	for _, t := range mts.Tracks {
+		if t.Streamer.Len() > mts.length {
+			mts.length = t.Streamer.Len()
 		}
 	}
 	return nil
@@ -46,9 +57,9 @@ func (mts *MultiTrackSeeker) Stream(samples [][2]float64) (n int, ok bool) {
 		samples[i] = [2]float64{0, 0}
 	}
 
-	for _, track := range mts.tracks {
-		if mts.position < track.Len() {
-			nTrack, _ := track.Stream(buffer)
+	for _, t := range mts.Tracks {
+		if mts.position < t.Streamer.Len() {
+			nTrack, _ := t.Streamer.Stream(buffer)
 			for i := 0; i < nTrack && i < len(samples); i++ {
 				samples[i][0] += buffer[i][0]
 				samples[i][1] += buffer[i][1]
@@ -63,9 +74,9 @@ func (mts *MultiTrackSeeker) Seek(p int) error {
 	if p < 0 || p > mts.length {
 		return fmt.Errorf("seek position out of range")
 	}
-	for _, track := range mts.tracks {
-		if p < track.Len() {
-			if err := track.Seek(p); err != nil {
+	for _, t := range mts.Tracks {
+		if p < t.Streamer.Len() {
+			if err := t.Streamer.Seek(p); err != nil {
 				return err
 			}
 		}
@@ -86,15 +97,21 @@ func (mts *MultiTrackSeeker) Err() error {
 	return nil
 }
 
-func NewMultiTrackSeeker(tracks []beep.StreamSeeker, format beep.Format) *MultiTrackSeeker {
+func NewMultiTrackSeeker(streams []beep.StreamSeeker, format beep.Format) *MultiTrackSeeker {
 	length := 0
-	for _, track := range tracks {
-		if track.Len() > length {
-			length = track.Len()
+	tracks := make([]Track, 0, len(streams))
+	for i, s := range streams {
+		if s.Len() > length {
+			length = s.Len()
 		}
+		tracks = append(tracks, Track{
+			Streamer:    s,
+			TrackNumber: i + 1,
+			TrackName:   fmt.Sprintf("Track %d", i+1),
+		})
 	}
 	return &MultiTrackSeeker{
-		tracks:   tracks,
+		Tracks:   tracks,
 		format:   format,
 		position: 0,
 		length:   length,
