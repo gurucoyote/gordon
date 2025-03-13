@@ -25,7 +25,7 @@ You can use the 'play' command followed by the file path to play a music file.`,
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 1 {
+		if len(args) >= 1 {
 			loadCmd.Run(cmd, args)
 		} else {
 			cmd.Help()
