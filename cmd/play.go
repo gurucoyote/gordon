@@ -33,6 +33,25 @@ type audioPanel struct {
 	volume     *effects.Volume
 }
 
+var listTracksCmd = &cobra.Command{
+	Use:   "list-tracks",
+	Short: "List all loaded tracks",
+	Run: func(cmd *cobra.Command, args []string) {
+		if ap == nil {
+			fmt.Println("No audio loaded!")
+			return
+		}
+		mts, ok := ap.streamer.(*MultiTrackSeeker)
+		if !ok {
+			fmt.Println("Current streamer is not a MultiTrackSeeker")
+			return
+		}
+		for _, t := range mts.Tracks {
+			fmt.Printf("Track %d: %s (length: %d samples)\n", t.TrackNumber, t.TrackName, t.Streamer.Len())
+		}
+	},
+}
+
 func newAudioPanel(sampleRate beep.SampleRate, streamer beep.StreamSeeker) *audioPanel {
 	// ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer)}
 	loop := LoopBetween(-1, 0, streamer.Len(), streamer)
@@ -350,7 +369,7 @@ var saveCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(loadCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd, speedCmd)
-	RootCmd.AddCommand(posCmd, loopStatusCmd, speedCmd)
+	RootCmd.AddCommand(posCmd, loopStatusCmd, speedCmd, listTracksCmd)
 }
 
 func seekPos(pos float64) {
