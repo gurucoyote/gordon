@@ -8,7 +8,8 @@ import (
 	"github.com/gopxl/beep"
 )
 
-// PinkNoise implements beep.Streamer and generates pink noise using the Voss–McCartney algorithm.
+ // PinkNoise implements beep.Streamer and generates pink noise using the Voss–McCartney algorithm.
+// It streams infinite pink noise and is fully compliant with the beep.Streamer interface.
 type PinkNoise struct {
 	rng        *rand.Rand
 	rows       []float64
@@ -60,4 +61,13 @@ func (p *PinkNoise) Stream(samples [][2]float64) (n int, ok bool) {
 // Err returns nil as this Streamer does not track errors.
 func (p *PinkNoise) Err() error {
 	return nil
+}
+
+func (p *PinkNoise) Reset() {
+	p.index = 0
+	p.runningSum = 0
+	for i := 0; i < p.numRows; i++ {
+		p.rows[i] = p.rng.Float64()*2 - 1
+		p.runningSum += p.rows[i]
+	}
 }
