@@ -34,7 +34,7 @@ type audioPanel struct {
 }
 
 var listTracksCmd = &cobra.Command{
-	Use:   "list-tracks",
+	Use:   "list",
 	Short: "List all loaded tracks",
 	Run: func(cmd *cobra.Command, args []string) {
 		if ap == nil {
