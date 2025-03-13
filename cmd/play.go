@@ -104,7 +104,7 @@ var loadCmd = &cobra.Command{
 				format = decodedFormat
 				mts = NewMultiTrackSeeker([]beep.StreamSeeker{}, initFormat)
 			}
-			mts.AddTrack(streamer)
+			mts.AddTrack(streamer, file)
 			fmt.Printf("Loaded file: %s\n", file)
 		}
 		if ap == nil {

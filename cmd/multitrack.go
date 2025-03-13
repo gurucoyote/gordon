@@ -19,11 +19,11 @@ type MultiTrackSeeker struct {
 	length   int
 }
 
-func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker) {
+func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) {
 	newTrack := Track{
 		Streamer:    track,
 		TrackNumber: len(mts.Tracks) + 1,
-		TrackName:   fmt.Sprintf("Track %d", len(mts.Tracks)+1),
+		TrackName:   fileName,
 	}
 	mts.Tracks = append(mts.Tracks, newTrack)
 	// Update the overall length if the added track is longer.
