@@ -28,16 +28,23 @@ func (mts *MultiTrackSeeker) AddTrackWithOffset(track beep.StreamSeeker, fileNam
 			nextTrackNumber = t.TrackNumber + 1
 		}
 	}
+	// Create silence streamer for the offset duration.
+	silenceSamples := mts.format.SampleRate.N(time.Duration(offset * float64(time.Second)))
+	silenceStreamer := beep.Silence(silenceSamples)
+	// Combine silence with the actual track.
+	composite := beep.Seq(silenceStreamer, track)
+
 	newTrack := Track{
-		Streamer:    track,
+		Streamer:    composite,
 		TrackNumber: nextTrackNumber,
 		TrackName:   fileName,
 		Offset:      offset,
 	}
 	mts.Tracks = append(mts.Tracks, newTrack)
-	newLength := mts.format.SampleRate.N(time.Duration(offset * float64(time.Second))) + track.Len()
-	if newLength > mts.length {
-		mts.length = newLength
+	// Update overall length: include silence plus track length.
+	trackLength := silenceSamples + track.Len()
+	if trackLength > mts.length {
+		mts.length = trackLength
 	}
 	return newTrack.TrackNumber
 }
@@ -66,23 +73,13 @@ func (mts *MultiTrackSeeker) Stream(samples [][2]float64) (n int, ok bool) {
 		return 0, false
 	}
 
-	buffer := make([][2]float64, len(samples))
+	// Zero out the output buffer.
 	for i := range samples {
 		samples[i] = [2]float64{0, 0}
 	}
 
+	buffer := make([][2]float64, len(samples))
 	for _, t := range mts.Tracks {
-		offsetSamples := mts.format.SampleRate.N(time.Duration(t.Offset * float64(time.Second)))
-		if mts.position < offsetSamples {
-			// Track hasn't started yet; contribute silence.
-			continue
-		}
-		effectivePos := mts.position - offsetSamples
-		if effectivePos >= t.Streamer.Len() {
-			// Track finished; contribute silence.
-			continue
-		}
-		t.Streamer.Seek(effectivePos)
 		nTrack, _ := t.Streamer.Stream(buffer)
 		for i := 0; i < nTrack && i < len(samples); i++ {
 			samples[i][0] += buffer[i][0]
