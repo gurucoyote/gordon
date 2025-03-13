@@ -339,7 +339,7 @@ var saveCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(loadCmd, pauseCmd, rewindCmd, forwardCmd, volumeCmd, setMarkerCmd, gotoCmd, loopCmd, saveCmd, speedCmd)
-	RootCmd.AddCommand(posCmd, loopStatusCmd)
+	RootCmd.AddCommand(posCmd, loopStatusCmd, speedCmd)
 }
 
 func seekPos(pos float64) {
@@ -456,5 +456,21 @@ var posCmd = &cobra.Command{
 		volume := ap.volume.Volume
 		speaker.Unlock()
 		fmt.Printf("%.3f / %.3f (Volume: %.1f)\n", position, length, volume)
+	},
+}
+var speedCmd = &cobra.Command{
+	Use:   "speed [multiplier]",
+	Short: "Set playback speed multiplier (e.g. 0.5 for half speed, 2 for double speed)",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		newSpeed, err := strconv.ParseFloat(args[0], 64)
+		if err != nil {
+			fmt.Printf("Failed to parse speed multiplier: %s\n", err)
+			return
+		}
+		speaker.Lock()
+		ap.resampler.SetRatio(newSpeed)
+		speaker.Unlock()
+		fmt.Printf("Playback speed set to %.2fx\n", newSpeed)
 	},
 }
