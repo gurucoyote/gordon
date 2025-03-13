@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gopxl/beep"
 )
@@ -39,6 +40,10 @@ func (mts *MultiTrackSeeker) AddTrackWithOffset(track beep.StreamSeeker, fileNam
 		mts.length = newLength
 	}
 	return newTrack.TrackNumber
+}
+
+func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) int {
+	return mts.AddTrackWithOffset(track, fileName, 0)
 }
 
 func (mts *MultiTrackSeeker) RemoveTrack(index int) error {
