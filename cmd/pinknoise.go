@@ -3,7 +3,12 @@ package cmd
 import (
 	"math/bits"
 	"math/rand"
+	"os"
+	"os/signal"
 	"time"
+
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/speaker"
 )
 
  // PinkNoise implements beep.Streamer and generates pink noise using the Voss–McCartney algorithm.
@@ -56,7 +61,6 @@ func (p *PinkNoise) Stream(samples [][2]float64) (n int, ok bool) {
 	return n, true
 }
 
-// Err returns nil as this Streamer does not track errors.
 func (p *PinkNoise) Err() error {
 	return nil
 }
@@ -68,4 +72,8 @@ func (p *PinkNoise) Reset() {
 		p.rows[i] = p.rng.Float64()*2 - 1
 		p.runningSum += p.rows[i]
 	}
+}
+
+func playPinkNoise() {
+	speaker.Play(NewPinkNoise())
 }
