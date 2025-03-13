@@ -128,8 +128,24 @@ var loadCmd = &cobra.Command{
 				initFormat = format
 			}
 		}
-		// iterate over each provided file
-		for _, file := range args {
+		// iterate over provided arguments: if an argument is a float, it
+		// represents an offset for the next filename; otherwise load with offset 0.
+		for i := 0; i < len(args); {
+			offset := 0.0
+			var file string
+			if f, err := strconv.ParseFloat(args[i], 64); err == nil {
+				offset = f
+				i++
+				if i >= len(args) {
+					fmt.Printf("Expected filename after offset %v\n", offset)
+					return
+				}
+				file = args[i]
+				i++
+			} else {
+				file = args[i]
+				i++
+			}
 			if _, err := os.Stat(file); os.IsNotExist(err) {
 				fmt.Printf("File %s does not exist\n", file)
 				return
@@ -164,8 +180,8 @@ var loadCmd = &cobra.Command{
 				format = decodedFormat
 				mts = NewMultiTrackSeeker([]beep.StreamSeeker{}, initFormat)
 			}
-			trackNum := mts.AddTrack(streamer, file)
-			fmt.Printf("Loaded file: %s as track %d\n", file, trackNum)
+			trackNum := mts.AddTrackWithOffset(streamer, file, offset)
+			fmt.Printf("Loaded file: %s as track %d with offset %.2f\n", file, trackNum, offset)
 		}
 		if ap == nil {
 			ap = newAudioPanel(initFormat.SampleRate, mts)
