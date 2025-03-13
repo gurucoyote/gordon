@@ -30,7 +30,6 @@ func (mts *MultiTrackSeeker) AddTrackWithOffset(track beep.StreamSeeker, fileNam
 	}
 	// Create silence streamer for the offset duration.
 	silenceSamples := mts.format.SampleRate.N(time.Duration(offset * float64(time.Second)))
-	silenceStreamer := beep.Silence(silenceSamples)
 	// Combine silence with the actual track using a CompositeSeeker.
 	composite := &CompositeSeeker{
 		silenceLen: silenceSamples,
@@ -173,6 +172,17 @@ func (cs *CompositeSeeker) Seek(p int) error {
 
 func (cs *CompositeSeeker) Len() int {
 	return cs.silenceLen + cs.track.Len()
+}
+
+func (cs *CompositeSeeker) Err() error {
+	// If the underlying track implements Err(), use it.
+	type errorGetter interface {
+		Err() error
+	}
+	if eg, ok := cs.track.(errorGetter); ok {
+		return eg.Err()
+	}
+	return nil
 }
 
 func NewMultiTrackSeeker(streams []beep.StreamSeeker, format beep.Format) *MultiTrackSeeker {
