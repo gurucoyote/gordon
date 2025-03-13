@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/speaker"
 )
@@ -76,4 +78,24 @@ func (p *PinkNoise) Reset() {
 
 func playPinkNoise() {
 	speaker.Play(NewPinkNoise())
+}
+
+var pinkPlaying bool
+
+var pinkCmd = &cobra.Command{
+	Use:   "pink",
+	Short: "Toggle pink noise playback",
+	Run: func(cmd *cobra.Command, args []string) {
+		if pinkPlaying {
+			speaker.Clear()
+			pinkPlaying = false
+		} else {
+			playPinkNoise()
+			pinkPlaying = true
+		}
+	},
+}
+
+func init() {
+	RootCmd.AddCommand(pinkCmd)
 }
