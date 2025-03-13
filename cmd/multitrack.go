@@ -20,9 +20,15 @@ type MultiTrackSeeker struct {
 }
 
 func (mts *MultiTrackSeeker) AddTrack(track beep.StreamSeeker, fileName string) {
+	nextTrackNumber := 1
+	for _, t := range mts.Tracks {
+		if t.TrackNumber >= nextTrackNumber {
+			nextTrackNumber = t.TrackNumber + 1
+		}
+	}
 	newTrack := Track{
 		Streamer:    track,
-		TrackNumber: len(mts.Tracks) + 1,
+		TrackNumber: nextTrackNumber,
 		TrackName:   fileName,
 	}
 	mts.Tracks = append(mts.Tracks, newTrack)
