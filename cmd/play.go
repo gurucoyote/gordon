@@ -2,18 +2,18 @@ package cmd
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"time"
-	"math"
 
-	"github.com/gopxl/beep"
-	"github.com/gopxl/beep/effects"
-	"github.com/gopxl/beep/flac"
-	"github.com/gopxl/beep/mp3"
-	"github.com/gopxl/beep/speaker"
-	"github.com/gopxl/beep/vorbis"
-	"github.com/gopxl/beep/wav"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/effects"
+	"github.com/gopxl/beep/v2/flac"
+	"github.com/gopxl/beep/v2/mp3"
+	"github.com/gopxl/beep/v2/speaker"
+	"github.com/gopxl/beep/v2/vorbis"
+	"github.com/gopxl/beep/v2/wav"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -31,6 +31,9 @@ type audioPanel struct {
 	resampler  *beep.Resampler
 	loop       *loopBetween
 	volume     *effects.Volume
+	baseRatio  float64
+	speed      float64
+	playing    bool
 }
 
 var listTracksCmd = &cobra.Command{
@@ -94,21 +97,49 @@ var dropCmd = &cobra.Command{
 }
 
 func newAudioPanel(sampleRate beep.SampleRate, streamer beep.StreamSeeker) *audioPanel {
-	// ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer)}
 	loop := LoopBetween(-1, 0, streamer.Len(), streamer)
 	ctrl := &beep.Ctrl{Streamer: loop}
 	resampler := beep.ResampleRatio(4, 1, ctrl)
 	volume := &effects.Volume{Streamer: resampler, Base: 2}
-	return &audioPanel{sampleRate,
-		streamer,
-		ctrl,
-		resampler,
-		loop,
-		volume}
+	ap := &audioPanel{
+		sampleRate: sampleRate,
+		streamer:   streamer,
+		ctrl:       ctrl,
+		resampler:  resampler,
+		loop:       loop,
+		volume:     volume,
+		baseRatio:  float64(sampleRate) / float64(defaultSampleRate),
+		speed:      1.0,
+	}
+	ap.updateResampleRatio()
+	return ap
 }
 
 func (ap *audioPanel) play() {
+	if ap == nil {
+		return
+	}
+	if ap.playing {
+		return
+	}
+	ap.playing = true
 	speaker.Play(ap.volume)
+}
+
+func (ap *audioPanel) updateResampleRatio() {
+	target := ap.baseRatio * ap.speed
+	if target <= 0 {
+		target = ap.baseRatio
+		if target <= 0 {
+			target = 1
+		}
+	}
+	ap.resampler.SetRatio(target)
+}
+
+func (ap *audioPanel) setSpeed(multiplier float64) {
+	ap.speed = multiplier
+	ap.updateResampleRatio()
 }
 
 var ap *audioPanel
@@ -556,7 +587,7 @@ var speedCmd = &cobra.Command{
 			return
 		}
 		speaker.Lock()
-		ap.resampler.SetRatio(newSpeed)
+		ap.setSpeed(newSpeed)
 		speaker.Unlock()
 		fmt.Printf("Playback speed set to %.2fx\n", newSpeed)
 	},

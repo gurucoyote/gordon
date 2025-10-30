@@ -1,0 +1,26 @@
+# Beep v2 Upgrade Notes
+
+This repository now targets `github.com/gopxl/beep/v2` for audio playback. The points below capture everything required to get v2 running cleanly with the existing command set.
+
+1. **Module and Backend Updates**  
+   - `go.mod` now depends on `github.com/gopxl/beep/v2 v2.1.1`; the legacy v1 module and `faiface/beep` are removed.  
+   - Oto v3 (`github.com/ebitengine/oto/v3`) and `purego` ship with v2, so they were added as indirect deps. Run `go build ./...` (after deleting the literal `File: cmd/` directory) to hydrate the new sums.
+
+2. **Speaker Lifecycle**  
+   - `speaker.Init` in v2 returns an error when called more than once. `cmd/root.go` wraps it in `ensureSpeaker()` using `sync.Once`, so every CLI command reuses the same device.  
+   - The initialization keeps the same sample rate (`defaultSampleRate = 44100`) that the rest of the app assumes.
+
+3. **Resampling and Playback Speed**  
+   - `newAudioPanel` records the source file’s sample rate and computes a base ratio against the speaker rate.  
+   - `updateResampleRatio` applies `baseRatio * speed` to the v2 resampler, so multi-rate files and the `speed` command both produce correct tempo without pitch artifacts.  
+   - `speed` now delegates to `audioPanel.setSpeed`, preserving the original ratio when changing playback speed.
+
+4. **Single Playback Registration**  
+   - v2 mixes every streamer passed to `speaker.Play`. Multiple registrations of the same streamer caused the “fast-forward with constant pitch” symptom.  
+   - `audioPanel.play()` tracks whether playback has already been registered, preventing duplicate mixer entries while still allowing pause/seek/loop commands.
+
+5. **Compatibility Checks**  
+   - After upgrading, rebuild with `go build ./cmd` and `go build .`.  
+   - Smoke test with `./gordon <file>`; playback should match real time even when files differ in sample rate.
+
+Keep this checklist handy if you port more commands (e.g., the multitrack branch) to v2—the same resample ratio and single-init rules apply.

@@ -2,12 +2,31 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/gopxl/beep"
-	"github.com/gopxl/beep/speaker"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/speaker"
 	"github.com/spf13/cobra"
 	"os"
+	"sync"
 	"time"
 )
+
+const defaultSampleRate = beep.SampleRate(44100)
+
+var (
+	speakerOnce    sync.Once
+	speakerInitErr error
+)
+
+func ensureSpeaker() error {
+	speakerOnce.Do(func() {
+		sr := defaultSampleRate
+		speakerInitErr = speaker.Init(sr, sr.N(time.Second/10))
+	})
+	if speakerInitErr != nil {
+		return fmt.Errorf("failed to init speaker: %w", speakerInitErr)
+	}
+	return nil
+}
 
 var RootCmd = &cobra.Command{
 	Use:   "app",
@@ -15,9 +34,8 @@ var RootCmd = &cobra.Command{
 	Long: `This is a command-line music player application. It supports playing music files in mp3, flac, or wav format.
 You can use the 'play' command followed by the file path to play a music file.`,
 	Args: cobra.ArbitraryArgs,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		sr := beep.SampleRate(44100)
-		speaker.Init(sr, sr.N(time.Second/10))
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return ensureSpeaker()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		if ap != nil {
