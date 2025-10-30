@@ -5,23 +5,28 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/gopxl/beep/v2"
 	"github.com/gopxl/beep/v2/effects"
 	"github.com/gopxl/beep/v2/flac"
+	"github.com/gopxl/beep/v2/midi"
 	"github.com/gopxl/beep/v2/mp3"
 	"github.com/gopxl/beep/v2/speaker"
 	"github.com/gopxl/beep/v2/vorbis"
 	"github.com/gopxl/beep/v2/wav"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	Markers []PlaybackPosition
-	format  beep.Format
+	Markers           []PlaybackPosition
+	format            beep.Format
+	midiSoundFontOnce sync.Once
+	midiSoundFont     *midi.SoundFont
+	midiSoundFontErr  error
 )
 
 type audioPanel struct {
@@ -34,6 +39,23 @@ type audioPanel struct {
 	baseRatio  float64
 	speed      float64
 	playing    bool
+}
+
+func ensureMidiSoundFont() (*midi.SoundFont, error) {
+	midiSoundFontOnce.Do(func() {
+		if soundFontPath == "" {
+			midiSoundFontErr = fmt.Errorf("no soundfont configured; re-run with --soundfont to load MIDI files")
+			return
+		}
+		f, err := os.Open(soundFontPath)
+		if err != nil {
+			midiSoundFontErr = fmt.Errorf("failed to open soundfont: %w", err)
+			return
+		}
+		defer f.Close()
+		midiSoundFont, midiSoundFontErr = midi.NewSoundFont(f)
+	})
+	return midiSoundFont, midiSoundFontErr
 }
 
 var listTracksCmd = &cobra.Command{
@@ -197,6 +219,20 @@ var loadCmd = &cobra.Command{
 				streamer, decodedFormat, err = flac.Decode(f)
 			case strings.HasSuffix(file, ".ogg"):
 				streamer, decodedFormat, err = vorbis.Decode(f)
+			case strings.HasSuffix(file, ".mid") || strings.HasSuffix(file, ".midi"):
+				var sf *midi.SoundFont
+				sf, err = ensureMidiSoundFont()
+				if err != nil {
+					fmt.Printf("Failed to load MIDI soundfont: %s\n", err)
+					return
+				}
+				var midiStream beep.StreamSeeker
+				midiStream, decodedFormat, err = midi.Decode(f, sf, defaultSampleRate)
+				if err == nil {
+					buffer := beep.NewBuffer(decodedFormat)
+					buffer.Append(midiStream)
+					streamer = buffer.Streamer(0, buffer.Len())
+				}
 			default:
 				fmt.Printf("Unsupported file format: %s\n", file)
 				return

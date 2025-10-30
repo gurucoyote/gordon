@@ -15,6 +15,7 @@ const defaultSampleRate = beep.SampleRate(44100)
 var (
 	speakerOnce    sync.Once
 	speakerInitErr error
+	soundFontPath  string
 )
 
 func ensureSpeaker() error {
@@ -52,6 +53,7 @@ You can use the 'play' command followed by the file path to play a music file.`,
 }
 
 func init() {
+	RootCmd.PersistentFlags().StringVar(&soundFontPath, "soundfont", "", "path to SoundFont (.sf2) for MIDI playback")
 	RootCmd.AddCommand(exitCmd)
 }
 
