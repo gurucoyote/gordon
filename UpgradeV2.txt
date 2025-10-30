@@ -23,4 +23,8 @@ This repository now targets `github.com/gopxl/beep/v2` for audio playback. The p
    - After upgrading, rebuild with `go build ./cmd` and `go build .`.  
    - Smoke test with `./gordon <file>`; playback should match real time even when files differ in sample rate.
 
+6. **Defensive Command Guards**  
+   - Playback controls now verify that an audio panel exists before touching shared state. If a decode fails, commands such as `forward`, `pause`, or `volume` will report “No audio loaded!” instead of panicking on a nil pointer.  
+   - `seekPos` shares the same guard, keeping keyboard shortcuts safe after load errors.
+
 Keep this checklist handy if you port more commands (e.g., the multitrack branch) to v2—the same resample ratio and single-init rules apply.
