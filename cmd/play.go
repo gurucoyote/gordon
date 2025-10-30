@@ -164,6 +164,14 @@ func (ap *audioPanel) setSpeed(multiplier float64) {
 	ap.updateResampleRatio()
 }
 
+func requireAudioLoaded() bool {
+	if ap == nil {
+		fmt.Println("No audio loaded!")
+		return false
+	}
+	return true
+}
+
 var ap *audioPanel
 
 var loadCmd = &cobra.Command{
@@ -272,6 +280,9 @@ var pauseCmd = &cobra.Command{
 	Short:   "Toggle play/pause of current sound",
 	Long:    `Toggle play/pause of current sound.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		// pause/resume playback
 		speaker.Lock()
 		ap.ctrl.Paused = !ap.ctrl.Paused
@@ -291,6 +302,9 @@ var rewindCmd = &cobra.Command{
 	Aliases: []string{"rw"},
 	Short:   "Rewind playback position by n seconds",
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		var relpos float64 = 1.0
 		if len(args) > 0 {
 			var err error
@@ -312,6 +326,9 @@ var forwardCmd = &cobra.Command{
 	Aliases: []string{"fw"},
 	Short:   "Forward playback position by n seconds",
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		var relpos float64 = 1.0
 		if len(args) > 0 {
 			var err error
@@ -332,6 +349,9 @@ var volumeCmd = &cobra.Command{
 	Short:   "set volume in 0-100%",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		vol, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse argument: %s\n", err)
@@ -354,6 +374,9 @@ var setMarkerCmd = &cobra.Command{
 	Short:   "Set a marker",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		index, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse argument: %s\n", err)
@@ -384,6 +407,9 @@ var gotoCmd = &cobra.Command{
 	Short: "Go to a marker",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		markerIndex, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse argument: %s\n", err)
@@ -408,6 +434,9 @@ var loopCmd = &cobra.Command{
 	Short: "Loop between two markers",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		startMarker, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse start_marker argument: %s\n", err)
@@ -434,6 +463,9 @@ var saveCmd = &cobra.Command{
 	Long:  `Save the audio loop between two specified markers to a .wav file.`,
 	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
+		if !requireAudioLoaded() {
+			return
+		}
 		startMarker, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Printf("Failed to parse start_marker argument: %s\n", err)
@@ -497,6 +529,9 @@ func init() {
 }
 
 func seekPos(pos float64) {
+	if !requireAudioLoaded() {
+		return
+	}
 	newPos := ap.streamer.Position()
 	// move this by the passed float seconds
 	newPos += ap.sampleRate.N(time.Duration(pos) * time.Second)
